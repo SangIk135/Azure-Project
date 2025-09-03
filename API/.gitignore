@@ -1,0 +1,5 @@
+# 민감한 환경 변수가 담긴 .env 파일을 무시합니다.
+.env
+
+# (선택) Node.js 프로젝트라면 node_modules도 추가하는 것이 좋습니다.
+node_modules
