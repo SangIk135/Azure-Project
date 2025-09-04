@@ -1,0 +1,34 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# 빌드 결과물 (TypeScript 등을 사용하는 경우)
+/server/build/
+/server/dist/
+
+# 환경 변수 파일 (매우 중요!)
+/server/.env
+
+# 테스트 커버리지
+/server/coverage/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
