@@ -239,7 +239,7 @@ function LoginPage({ setPage, setUser }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('/api/auth/login', {
+            const res = await fetch('https://testbe1jo.azurewebsites.net/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -296,7 +296,7 @@ function SignUpPage({ setPage }) {
     const handleSignUp = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('/api/auth/signup', {
+            const res = await fetch('https://testbe1jo.azurewebsites.net/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, nickname })
@@ -361,7 +361,7 @@ function HomePage({ user }) {
 function PublicPlaylistsPage({ playlists, setPage, setContext }) {
     const [publicPlaylists, setPublicPlaylists] = useState([]);
     useEffect(() => {
-        fetch('/api/playlists/public')
+        fetch('https://testbe1jo.azurewebsites.net/api/playlists/public')
             .then(res => res.json())
             .then(data => {
                 // 서버 필드명 변환
@@ -410,7 +410,7 @@ function MyPlaylistsPage({ playlists, user, setPage, setContext }) {
     const [myPlaylists, setMyPlaylists] = useState([]);
     useEffect(() => {
         if (!user?.token) return;
-        fetch('/api/playlists/mine', {
+        fetch('https://testbe1jo.azurewebsites.net/api/playlists/mine', {
             headers: { 'Authorization': `Bearer ${user.token}` }
         })
             .then(res => res.json())
@@ -464,7 +464,7 @@ function PlaylistDetailPage({ setPage, context, user, playlists, deletePlaylist 
     const playlistId = context?.playlistId;
     useEffect(() => {
         if (!playlistId) return;
-        fetch(`/api/playlists/${playlistId}`)
+        fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlistId}`)
             .then(res => res.json())
             .then(data => {
                 // 서버 필드명 변환
@@ -553,7 +553,7 @@ function CreatePlaylistPage({ setPage, addPlaylist, user }) {
             is_public: formData.get('is_public') === 'on',
         };
         try {
-            const res = await fetch('/api/playlists', {
+            const res = await fetch('https://testbe1jo.azurewebsites.net/api/playlists', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -600,7 +600,7 @@ function SearchPage({ context }) {
       if (searchTerm) {
         setLoading(true);
         setError('');
-        fetch(`/api/songs/search?q=${encodeURIComponent(searchTerm)}`)
+        fetch(`https://testbe1jo.azurewebsites.net/api/songs/search?q=${encodeURIComponent(searchTerm)}`)
           .then(res => res.json())
           .then(data => {
             if (data.success && Array.isArray(data.items)) {
