@@ -26,6 +26,7 @@ jobs:
       - name: npm install, build, and test
         run: |
           npm install
+          working-directory: ./server
           npm run build --if-present
           npm run test --if-present
 
@@ -62,4 +63,5 @@ jobs:
           app-name: 'testbe1jo'
           slot-name: 'Production'
           package: .
+
           
