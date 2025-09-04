@@ -24,9 +24,8 @@ jobs:
           node-version: '22.x'
 
       - name: npm install, build, and test
-        run: |
-          npm install
-          working-directory: ./project-cloud-fin/server
+        run: 
+          cd ./project-cloud-fin/server && npm install
           npm run build --if-present
           npm run test --if-present
 
@@ -65,4 +64,5 @@ jobs:
           package: .
 
           
+
 
