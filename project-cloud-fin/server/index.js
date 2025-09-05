@@ -11,7 +11,7 @@
 
 
 // 필요한 모듈들을 가져옵니다.
-
+console.log("--- 애플리케이션 시작 ---");
 
 const express = require('express');
 const cors = require('cors');
@@ -23,6 +23,7 @@ require('dotenv').config();
 // Express 애플리케이션을 생성합니다.
 const app = express();
 const PORT = process.env.PORT || 3001; // 서버 포트 설정
+console.log("--- Express 앱 생성 완료 ---");
 
 // 미들웨어를 설정합니다.
 const corsOptions = {
@@ -32,6 +33,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions)) // CORS 허용
 app.use(express.json()); // JSON 요청 본문 파싱
+console.log("--- 미들웨어 설정 완료 ---");
 
 // =================================================================
 // 데이터베이스 연결 설정 (실제 구현 시 채워야 할 부분)
@@ -44,7 +46,14 @@ const dbConfig = {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
 };
-// console.log('DB 연결 설정:', dbConfig); 
+// console.log('DB 연결 설정:', dbConfig);
+console.log("--- DB 설정값 확인 ---", {
+    host: dbConfig.host,
+    user: dbConfig.user,
+    database: dbConfig.database,
+    password_exists: !!dbConfig.password 
+});
+
 let pool;
 // DB 연결 풀 생성
 // (서버 시작 시 한 번만 실행되도록 처리 필요)
