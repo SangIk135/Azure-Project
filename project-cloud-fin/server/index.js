@@ -14,6 +14,7 @@
 console.log("--- 애플리케이션 시작 ---");
 
 const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
@@ -94,7 +95,6 @@ const authenticateToken = (req, res, next) => {
 
 
 // --- search.js 연동 추가 ---
-const path = require('path');
 const searchModule = require(path.join(__dirname, 'search.js'));
 
 // =================================================================
