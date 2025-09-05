@@ -25,7 +25,12 @@ const app = express();
 const PORT = process.env.PORT || 3001; // 서버 포트 설정
 
 // 미들웨어를 설정합니다.
-app.use(cors()); // CORS 허용
+const corsOptions = {
+  origin: 'https://polite-dune-035d4c800.2.azurestaticapps.net', // 허용할 프론트엔드 주소
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions)) // CORS 허용
 app.use(express.json()); // JSON 요청 본문 파싱
 
 // =================================================================
@@ -34,7 +39,7 @@ app.use(express.json()); // JSON 요청 본문 파싱
 // .env 파일과 같은 환경 변수에서 설정 정보를 가져오는 것을 권장합니다.
 const dbConfig = {
     host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
+    // port: process.env.DB_PORT,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
