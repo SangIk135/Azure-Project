@@ -35,7 +35,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions)) // CORS 허용
 app.use(express.json()); // JSON 요청 본문 파싱
-console.log("--- 미들웨어 설정 완료 ---");
+console.log("--- 미들웨어 설정 완료 ---"); // 완료 로그
 
 // =================================================================
 // 데이터베이스 연결 설정 (실제 구현 시 채워야 할 부분)
