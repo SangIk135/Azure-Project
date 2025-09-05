@@ -34,10 +34,8 @@ CREATE TABLE `Playlists` (
 -- =================================================================
 CREATE TABLE `Songs` (
     `song_id` INT NOT NULL AUTO_INCREMENT,
-    --`youtube_video_id` VARCHAR(20) NOT NULL COMMENT '유튜브 영상 고유 ID',
-    --title` VARCHAR(255) NOT NULL,
     `track_name` VARCHAR(255) NOT NULL COMMENT '곡명',
-    `artist` VARCHAR(25) NOT NULL COMMENT '아티스트명', 
+    `artist` VARCHAR(100) NOT NULL COMMENT '아티스트명', 
     `spotify_url` VARCHAR(255) NOT NULL COMMENT 'Spotify URL', 
     `album_image_url` VARCHAR(255) NOT NULL COMMENT 'Album Image URL', 
     PRIMARY KEY (`song_id`),

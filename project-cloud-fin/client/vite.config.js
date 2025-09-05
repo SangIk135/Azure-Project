@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://testbe1jo.azurewebsites.net'
+      '/api': 'http://localhost:3001'
     }
   }
 })

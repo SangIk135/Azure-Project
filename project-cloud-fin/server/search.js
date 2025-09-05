@@ -81,6 +81,7 @@ async function getAccessToken() {
  */
 async function spotifySearch({ query, token, type = 'track', limit = 10 }) {
     // Spotify 검색 API 호출
+    console.log("Spotify Search Request 발생");
     const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=${type}&limit=${limit}`, {
         headers: { Authorization: `Bearer ${token}` }
     });
@@ -101,7 +102,7 @@ module.exports = {
     getAccessToken,
     spotifySearch
 };
-
+/*
 // --- 메인 실행 로직 (JSON 출력을 위해 수정) ---
 (async () => {
   const args = process.argv.slice(2);
@@ -150,3 +151,4 @@ module.exports = {
   }
   // spotifySearch 함수 내에서 에러가 발생하면 이미 JSON으로 출력했으므로 별도 처리가 필요 없습니다.
 })();
+*/

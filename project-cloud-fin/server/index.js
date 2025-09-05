@@ -34,11 +34,12 @@ app.use(express.json()); // JSON 요청 본문 파싱
 // .env 파일과 같은 환경 변수에서 설정 정보를 가져오는 것을 권장합니다.
 const dbConfig = {
     host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+    database: process.env.DB_NAME,
 };
-
+// console.log('DB 연결 설정:', dbConfig); 
 let pool;
 // DB 연결 풀 생성
 // (서버 시작 시 한 번만 실행되도록 처리 필요)
@@ -114,11 +115,27 @@ authRouter.post('/login', async (req, res) => {
         const token = jwt.sign({ userId: user.user_id, nickname: user.nickname }, JWT_SECRET, { expiresIn: '1h' });
         res.json({ message: '로그인 성공', user: { userId: user.user_id, email: user.email, nickname: user.nickname }, token });
     } catch (err) {
+        console.error('로그인 실패:', err); // 에러 로그 출력 추가
         res.status(500).json({ message: '로그인 실패', error: err.message });
     }
 });
 
 app.use('/api/auth', authRouter);
+
+// [GET] /api/auth/me - JWT 토큰으로 사용자 정보 반환 (로그인 상태 확인)
+authRouter.get('/me', authenticateToken, async (req, res) => {
+    try {
+        const { userId } = req.user;
+        const [rows] = await pool.query('SELECT user_id, email, nickname FROM Users WHERE user_id = ?', [userId]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+        const user = rows[0];
+        res.json({ user });
+    } catch (err) {
+        res.status(500).json({ message: '사용자 정보 조회 실패', error: err.message });
+    }
+});
 
 
 // -----------------------------------------------------------------
@@ -206,27 +223,118 @@ playlistRouter.post('/:id/songs', authenticateToken, async (req, res) => {
     const { id: playlistId } = req.params;
     const { songId } = req.body;
     const { userId } = req.user;
+
+    const connection = await pool.getConnection(); // 풀에서 커넥션을 가져옵니다.
+
     try {
+        await connection.beginTransaction(); // 트랜잭션 시작
+
         // 소유자 확인
-        const [rows] = await pool.query("SELECT user_id FROM Playlists WHERE playlist_id = ?", [playlistId]);
-        if (rows.length === 0) return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
-        if (rows[0].user_id !== userId) return res.status(403).json({ message: '플레이리스트 소유자가 아닙니다.' });
+        const [rows] = await connection.query("SELECT user_id FROM Playlists WHERE playlist_id = ?", [playlistId]);
+        if (rows.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+        }
+        if (rows[0].user_id !== userId) {
+            await connection.rollback();
+            return res.status(403).json({ message: '플레이리스트 소유자가 아닙니다.' });
+        }
+
         // 곡 순서 지정
-        const [seqRows] = await pool.query("SELECT MAX(sequence) as maxSeq FROM Playlist_Songs WHERE playlist_id = ?", [playlistId]);
+        const [seqRows] = await connection.query("SELECT MAX(sequence) as maxSeq FROM Playlist_Songs WHERE playlist_id = ?", [playlistId]);
         const nextSeq = (seqRows[0].maxSeq || 0) + 1;
-        await pool.query(
+
+        // Playlist_Songs에 곡 추가
+        await connection.query(
             "INSERT INTO Playlist_Songs (playlist_id, song_id, sequence) VALUES (?, ?, ?)",
             [playlistId, songId, nextSeq]
         );
+
+        // Playlists 테이블의 updated_at 업데이트
+        await connection.query(
+            "UPDATE Playlists SET updated_at = CURRENT_TIMESTAMP WHERE playlist_id = ?",
+            [playlistId]
+        );
+
+        await connection.commit(); // 모든 쿼리 성공 시 커밋
         res.status(200).json({ message: '곡 추가 성공' });
+
     } catch (err) {
+        await connection.rollback(); // 에러 발생 시 롤백
+
         if (err.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ message: '이미 추가된 곡입니다.' });
         }
         res.status(500).json({ message: '곡 추가 실패', error: err.message });
+    } finally {
+        connection.release(); // 사용한 커넥션을 풀에 반환
     }
 });
 
+// [PUT] /api/playlists/:id - 플레이리스트 정보 수정 (이름, 설명, 공개여부)
+playlistRouter.put('/:id', authenticateToken, async (req, res) => {
+    const { id: playlistId } = req.params;
+    const { name, description, is_public } = req.body;
+    const { userId } = req.user;
+    try {
+        // 소유자 확인
+        const [rows] = await pool.query('SELECT user_id FROM Playlists WHERE playlist_id = ?', [playlistId]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+        }
+        if (rows[0].user_id !== userId) {
+            return res.status(403).json({ message: '플레이리스트 소유자가 아닙니다.' });
+        }
+        await pool.query(
+            'UPDATE Playlists SET name = ?, description = ?, is_public = ? WHERE playlist_id = ?',
+            [name, description, is_public, playlistId]
+        );
+        res.status(200).json({ message: '플레이리스트 정보 수정 성공' });
+    } catch (err) {
+        res.status(500).json({ message: '플레이리스트 정보 수정 실패', error: err.message });
+    }
+});
+
+// [DELETE] /api/playlists/:id - 플레이리스트 삭제 (인증 필요)
+playlistRouter.delete('/:id', authenticateToken, async (req, res) => {
+    const { id: playlistId } = req.params;
+    const { userId } = req.user;
+    try {
+        // 소유자 확인
+        const [rows] = await pool.query('SELECT user_id FROM Playlists WHERE playlist_id = ?', [playlistId]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+        }
+        if (rows[0].user_id !== userId) {
+            return res.status(403).json({ message: '플레이리스트 소유자가 아닙니다.' });
+        }
+        // 삭제
+        await pool.query('DELETE FROM Playlists WHERE playlist_id = ?', [playlistId]);
+        res.status(200).json({ message: '플레이리스트 삭제 성공' });
+    } catch (err) {
+        res.status(500).json({ message: '플레이리스트 삭제 실패', error: err.message });
+    }
+});
+
+// [DELETE] /api/playlists/:playlistId/songs/:songId - 플레이리스트에서 곡 삭제
+playlistRouter.delete('/:playlistId/songs/:songId', authenticateToken, async (req, res) => {
+    const { playlistId, songId } = req.params;
+    const { userId } = req.user;
+    try {
+        // 소유자 확인
+        const [rows] = await pool.query('SELECT user_id FROM Playlists WHERE playlist_id = ?', [playlistId]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+        }
+        if (rows[0].user_id !== userId) {
+            return res.status(403).json({ message: '플레이리스트 소유자가 아닙니다.' });
+        }
+        await pool.query('DELETE FROM Playlist_Songs WHERE playlist_id = ? AND song_id = ?', [playlistId, songId]);
+        res.status(200).json({ message: '곡 삭제 성공' });
+    } catch (err) {
+        res.status(500).json({ message: '곡 삭제 실패', error: err.message });
+    }
+});
 
 app.use('/api/playlists', playlistRouter);
 
@@ -253,8 +361,18 @@ songRouter.get('/search', async (req, res) => {
             console.error('Spotify 검색 실패'); // 에러 로그 추가
             return res.json({ success: false, message: 'Spotify 검색 실패' });
         }
-        // DB에 곡 캐시 저장 로직은 미구현 (여기서 Songs 테이블에 INSERT하면 됨)
-        // TODO: 검색 결과를 Songs 테이블에 캐시로 저장하는 로직 필요
+        // DB에 곡 캐시 저장 로직 구현
+        for (const item of results) {
+            try {
+                await pool.query(
+                    `INSERT IGNORE INTO Songs (track_name, artist, spotify_url, album_image_url) VALUES (?, ?, ?, ?)`,
+                    [item.trackName, item.artist, item.spotifyUrl, item.albumImageUrl]
+                );
+            } catch (err) {
+                // 곡 저장 실패 시 에러 로그만 남기고 계속 진행
+                console.error('곡 캐시 저장 실패:', err);
+            }
+        }
         return res.json({ success: true, items: results });
     } catch (err) {
         console.error('검색 중 서버 오류:', err); // 에러 로그 추가
@@ -262,7 +380,43 @@ songRouter.get('/search', async (req, res) => {
     }
 });
 
+// [GET] /api/songs/by-spotify-url - spotify_url로 song_id 반환
+songRouter.get('/by-spotify-url', async (req, res) => {
+    const spotifyUrl = req.query.spotifyUrl;
+    if (!spotifyUrl) {
+        return res.status(400).json({ message: 'spotifyUrl 파라미터가 필요합니다.' });
+    }
+    try {
+        const [rows] = await pool.query('SELECT song_id FROM Songs WHERE spotify_url = ?', [spotifyUrl]);
+        if (rows.length === 0) {
+            return res.json({ song_id: null });
+        }
+        return res.json({ song_id: rows[0].song_id });
+    } catch (err) {
+        return res.status(500).json({ message: '곡 정보 조회 실패', error: err.message });
+    }
+});
+
 app.use('/api/songs', songRouter);
+
+// -----------------------------------------------------------------
+// 3. Spotify Web SDK 토큰 발급 API
+// -----------------------------------------------------------------
+const spotifyRouter = express.Router();
+// [GET] /api/spotify/token - Spotify Web SDK용 액세스 토큰 발급
+spotifyRouter.get('/token', async (req, res) => {
+    try {
+        const token = await searchModule.getAccessToken();
+        if (!token) {
+            return res.status(500).json({ message: 'Spotify 토큰 발급 실패' });
+        }
+        res.json({ accessToken: token });
+    } catch (err) {
+        res.status(500).json({ message: 'Spotify 토큰 발급 중 오류', error: err.message });
+    }
+});
+app.use('/api/spotify', spotifyRouter);
+// -----------------------------------------------------------------
 
 
 // =================================================================
