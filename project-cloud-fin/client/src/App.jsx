@@ -240,7 +240,7 @@ function LoginPage({ setPage, setUser }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('https://testbe1jo.azurewebsites.net/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -298,7 +298,7 @@ function SignUpPage({ setPage }) {
   const handleSignUp = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('https://testbe1jo.azurewebsites.net/api/auth/signup', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, nickname })
@@ -363,7 +363,7 @@ function HomePage({ user }) {
 function PublicPlaylistsPage({ playlists, setPage, setContext }) {
   const [publicPlaylists, setPublicPlaylists] = useState([]);
   useEffect(() => {
-    fetch('https://testbe1jo.azurewebsites.net/api/playlists/public')
+    fetch('/api/playlists/public')
       .then(res => res.json())
       .then(data => {
         // 서버 필드명 변환
@@ -412,7 +412,7 @@ function MyPlaylistsPage({ playlists, user, setPage, setContext }) {
   const [myPlaylists, setMyPlaylists] = useState([]);
   useEffect(() => {
     if (!user?.token) return;
-    fetch('https://testbe1jo.azurewebsites.net/api/playlists/mine', {
+    fetch('/api/playlists/mine', {
       headers: { 'Authorization': `Bearer ${user.token}` }
     })
       .then(res => res.json())
@@ -472,7 +472,7 @@ function PlaylistDetailPage({ setPage, context, user, playlists, deletePlaylist 
   const playlistId = context?.playlistId;
   useEffect(() => {
     if (!playlistId) return;
-    fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlistId}`)
+    fetch(`/api/playlists/${playlistId}`)
       .then(res => res.json())
       .then(data => {
         // 서버 필드명 변환
@@ -514,7 +514,7 @@ function PlaylistDetailPage({ setPage, context, user, playlists, deletePlaylist 
   const handleSongDelete = async (songId) => {
     if (!window.confirm('이 곡을 삭제하시겠습니까?')) return;
     try {
-      const res = await fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlist.id}/songs/${songId}`, {
+      const res = await fetch(`/api/playlists/${playlist.id}/songs/${songId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${user.token}` }
       });
@@ -532,7 +532,7 @@ function PlaylistDetailPage({ setPage, context, user, playlists, deletePlaylist 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlist.id}`, {
+      const res = await fetch(`/api/playlists/${playlist.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -651,7 +651,7 @@ function CreatePlaylistPage({ setPage, user }) {
       is_public: formData.get('is_public') === 'on',
     };
     try {
-      const res = await fetch('https://testbe1jo.azurewebsites.net/api/playlists', {
+      const res = await fetch('/api/playlists', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -709,7 +709,7 @@ function SearchPage({ context, user }) {
 
   useEffect(() => {
     if (user?.token) {
-      fetch('https://testbe1jo.azurewebsites.net/api/playlists/mine', {
+      fetch('/api/playlists/mine', {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
         .then(res => res.json())
@@ -726,7 +726,7 @@ function SearchPage({ context, user }) {
     if (searchTerm) {
       setLoading(true);
       setError('');
-      fetch(`https://testbe1jo.azurewebsites.net/api/songs/search?q=${encodeURIComponent(searchTerm)}`)
+      fetch(`/api/songs/search?q=${encodeURIComponent(searchTerm)}`)
         .then(res => res.json())
         .then(data => {
           if (data.success && Array.isArray(data.items)) {
@@ -759,7 +759,7 @@ function SearchPage({ context, user }) {
     setAddStatus('');
     try {
       // song_id 조회: spotifyUrl로 서버에 요청
-      const res = await fetch(`https://testbe1jo.azurewebsites.net/api/songs/by-spotify-url?spotifyUrl=${encodeURIComponent(song.spotifyUrl)}`);
+      const res = await fetch(`/api/songs/by-spotify-url?spotifyUrl=${encodeURIComponent(song.spotifyUrl)}`);
       const data = await res.json();
       if (!data.song_id) {
         setAddStatus('곡 정보를 찾을 수 없습니다.');
@@ -767,7 +767,7 @@ function SearchPage({ context, user }) {
         return;
       }
       // 곡 추가 API 호출
-      const addRes = await fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlistId}/songs`, {
+      const addRes = await fetch(`/api/playlists/${playlistId}/songs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -977,7 +977,7 @@ export default function App() {
   useEffect(() => {
     const token = localStorage.getItem('jwt_token');
     if (token && !user) {
-      fetch('https://testbe1jo.azurewebsites.net/api/auth/me', {
+      fetch('/api/auth/me', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -1015,7 +1015,7 @@ export default function App() {
   const deletePlaylist = async (playlistId) => {
     if (!user?.token) return;
     try {
-      const res = await fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlistId}`, {
+      const res = await fetch(`/api/playlists/${playlistId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${user.token}`,
