@@ -47,7 +47,12 @@ const dbConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: process.env.DB_SSL
+    ssl: {ca: fs.readFileSync(path.join(__dirname, 'certs/DigiCertGlobalRootG2.crt.pem'), 'utf-8'),
+        
+        // 이 옵션이 HeidiSQL의 "Verify CA and hostname identity"와 동일한 역할을 합니다.
+        // 서버 인증서의 유효성을 검증하며, 보안을 위해 반드시 true로 설정해야 합니다.
+        rejectUnauthorized: true 
+    }
 };
 
 if (process.env.DB_SSL === 'true') {
