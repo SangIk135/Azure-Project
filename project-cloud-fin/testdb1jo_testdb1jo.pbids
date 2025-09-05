@@ -1,1 +1,0 @@
-{"version":"1.0","connections":[{"details":{"protocol":"mysql","address":{"server":"testdb1jo.mysql.database.azure.com","database":"testdb1jo"}},"options":{"ReturnSingleDatabase":true}}]}
