@@ -13,6 +13,8 @@
 // 필요한 모듈들을 가져옵니다.
 console.log("--- 애플리케이션 시작 ---");
 
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
@@ -33,7 +35,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions)) // CORS 허용
 app.use(express.json()); // JSON 요청 본문 파싱
-console.log("--- 미들웨어 설정 완료 ---");
+console.log("--- 미들웨어 설정 완료 ---"); // 완료 로그
 
 // =================================================================
 // 데이터베이스 연결 설정 (실제 구현 시 채워야 할 부분)
@@ -41,20 +43,29 @@ console.log("--- 미들웨어 설정 완료 ---");
 // .env 파일과 같은 환경 변수에서 설정 정보를 가져오는 것을 권장합니다.
 const dbConfig = {
     host: process.env.DB_HOST,
-    // port: process.env.DB_PORT,
+    port: process.env.DB_PORT, 
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: process.env.DB_SSL
+    ssl: {ca: fs.readFileSync(path.join(__dirname, 'certs/DigiCertGlobalRootG2.crt.pem'), 'utf-8'),
+        
+        // 이 옵션이 HeidiSQL의 "Verify CA and hostname identity"와 동일한 역할을 합니다.
+        // 서버 인증서의 유효성을 검증하며, 보안을 위해 반드시 true로 설정해야 합니다.
+       rejectUnauthorized: true 
+    }
 };
+
 
 if (process.env.DB_SSL === 'true') {
     dbConfig.ssl = { 
         ca: fs.readFileSync(path.join(__dirname, '../DigiCertGlobalRootG2.pem')),
     }
 }
+
+
+
 // console.log('DB 연결 설정:', dbConfig);
-console.log("--- DB 설정값 확인 ---", {
+console.log("--- DB 설정값 ---", {
     host: dbConfig.host,
     user: dbConfig.user,
     database: dbConfig.database,
@@ -93,8 +104,7 @@ const authenticateToken = (req, res, next) => {
 
 
 // --- search.js 연동 추가 ---
-const path = require('path');
-const searchModule = require(path.join(__dirname, 'search.js'));
+const searchModule = require(path.join(__dirname, 'musicFinder.js'));
 
 // =================================================================
 // API 라우트 정의
@@ -164,15 +174,27 @@ authRouter.get('/me', authenticateToken, async (req, res) => {
 // -----------------------------------------------------------------
 const playlistRouter = express.Router();
 
-// [GET] /api/playlists/public - 공개 플레이리스트 목록 조회
+// [GET] /api/playlists/public - 공개 플레이리스트 목록 조회 (수정된 코드)
 playlistRouter.get('/public', async (req, res) => {
     try {
         const [rows] = await pool.query(`
-            SELECT p.playlist_id, p.name, p.description, u.nickname as creator_nickname
+            SELECT 
+                p.playlist_id, 
+                p.name, 
+                p.description, 
+                u.nickname as creator_nickname,
+                s.album_image_url
             FROM Playlists p
             JOIN Users u ON p.user_id = u.user_id
+            LEFT JOIN (
+                SELECT ps.playlist_id, s.album_image_url
+                FROM Playlist_Songs ps
+                JOIN Songs s ON ps.song_id = s.song_id
+                WHERE ps.sequence = 1
+            ) s ON s.playlist_id = p.playlist_id
             WHERE p.is_public = TRUE
-            ORDER BY RAND() LIMIT 10
+            ORDER BY p.playlist_id DESC
+            LIMIT 10
         `);
         res.json(rows);
     } catch (err) {
@@ -185,11 +207,32 @@ playlistRouter.get('/mine', authenticateToken, async (req, res) => {
     const { userId } = req.user;
     try {
         const [rows] = await pool.query(`
-            SELECT p.playlist_id, p.name, COUNT(ps.song_id) as song_count
-            FROM Playlists p
-            LEFT JOIN Playlist_Songs ps ON p.playlist_id = ps.playlist_id
-            WHERE p.user_id = ?
-            GROUP BY p.playlist_id
+            SELECT 
+                p.playlist_id, 
+                p.name, 
+                COUNT(ps.song_id) as song_count,
+                s.album_image_url
+            FROM 
+                Playlists p
+            LEFT JOIN 
+                Playlist_Songs ps ON p.playlist_id = ps.playlist_id
+            LEFT JOIN (
+                SELECT 
+                ps2.playlist_id, 
+                s2.album_image_url
+                FROM 
+                Playlist_Songs ps2
+                JOIN 
+                Songs s2 ON ps2.song_id = s2.song_id
+                WHERE 
+                ps2.sequence = 1
+            ) s ON p.playlist_id = s.playlist_id
+            WHERE 
+                p.user_id = ?
+            GROUP BY 
+                p.playlist_id, s.album_image_url
+            ORDER BY 
+                p.playlist_id DESC;
         `, [userId]);
         res.json(rows);
     } catch (err) {
@@ -418,26 +461,30 @@ songRouter.get('/by-spotify-url', async (req, res) => {
     }
 });
 
-app.use('/api/songs', songRouter);
+const youtubeRouter = express.Router();
 
-// -----------------------------------------------------------------
-// 3. Spotify Web SDK 토큰 발급 API
-// -----------------------------------------------------------------
-const spotifyRouter = express.Router();
-// [GET] /api/spotify/token - Spotify Web SDK용 액세스 토큰 발급
-spotifyRouter.get('/token', async (req, res) => {
-    try {
-        const token = await searchModule.getAccessToken();
-        if (!token) {
-            return res.status(500).json({ message: 'Spotify 토큰 발급 실패' });
-        }
-        res.json({ accessToken: token });
-    } catch (err) {
-        res.status(500).json({ message: 'Spotify 토큰 발급 중 오류', error: err.message });
+// [GET] /api/youtube/search?q=검색어
+youtubeRouter.get('/ytsearch', async (req, res) => {
+    const query = req.query.q;
+    if (!query) {
+        return res.status(400).json({ message: '검색어(q) 파라미터가 필요합니다.' });
     }
-});
-app.use('/api/spotify', spotifyRouter);
-// -----------------------------------------------------------------
+    try {
+        const video = await searchModule.findMusicVideo(query); // videoInfo -> { title, link }
+
+        if (!video) {
+            return res.status(404).json({ message: '검색 결과가 없습니다.' });
+        }
+        return res.json({ success: true, title: video.title, link: video.link });
+    }
+    catch (error) {
+        console.error('YouTube 검색 중 오류:', error);
+        return res.status(500).json({ message: 'YouTube 검색 중 오류', error: error.message });
+    }
+})
+
+app.use('/api/songs', songRouter);
+app.use('/api/youtube', youtubeRouter);
 
 
 // =================================================================

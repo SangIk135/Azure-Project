@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
+import YouTube from 'react-youtube';
+
+const BASE_URL = `https://testbe1jo.azurewebsites.net`;
+// const BASE_URL = ""; // localhost
 
 // --- 전역 스타일 ---
 const GlobalStyle = createGlobalStyle`
@@ -15,18 +19,6 @@ const GlobalStyle = createGlobalStyle`
   ::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
 `;
 
-// --- Mock Data ---
-const mockUsers = [
-  { id: 1, username: 'musiclover', password: 'password123', email: 'music@lover.com', nickname: 'MusicLover' },
-  { id: 2, username: 'dj_master', password: 'password123', email: 'dj@master.com', nickname: 'DJMaster' },
-];
-
-const mockInitialPlaylists = [
-  { id: 1, name: '퇴근길 힙스터', creatorId: 2, creatorNickname: 'DJMaster', isPublic: true, songs: [{ id: 1, title: '봄날' }, { id: 2, title: '밤편지' }] },
-  { id: 2, name: '나만 아는 인디밴드', creatorId: 1, creatorNickname: 'MusicLover', isPublic: false, songs: [{ id: 3, title: '그대와 나, 설레임' }] },
-  { id: 3, name: '주말엔 K-POP', creatorId: 2, creatorNickname: 'DJMaster', isPublic: true, songs: [] },
-];
-
 const mockPopularArtists = [
   { id: 'artist-1', name: 'G-DRAGON', imageUrl: 'https://entertainimg.kbsmedia.co.kr/cms/uploads/PERSON_20241031091116_2e82077ae7a8a43736b41703763e8f0f.png' },
   { id: 'artist-2', name: 'aespa', imageUrl: 'https://i.namu.wiki/i/5Wzn3EtyCSm2SoKJoKJtIGCyiDXTRJVsyD1tPjT18Deutt9xTdSJ06vxCdyJKT24fSDL-DEO3hGi6Ze5fHvFGaoD2aTMVfHOpIW2cYUpzn-BYqaRJ5dQzYSZHQEsRZ3vrEXtGyfJD5ToK8B3yYR72Q.webp' },
@@ -41,19 +33,27 @@ const mockPopularArtists = [
 // --- 아이콘 컴포넌트 ---
 const MusicIcon = (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>);
 const PlayIcon = (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>);
+const EditIcon = (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>);
 const HomeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>);
 const PlaylistIcon = (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>);
 const GlobeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>);
 const SearchIcon = (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>);
 const PlusIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
+const ShareIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>);
 const LogoutIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>);
 const TrashIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>);
 
 
 // --- 공용 스타일 컴포넌트 ---
-const AuthPageContainer = styled.div` display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; background-color: #000; `;
-const PageContainer = styled.div` padding: 2.5rem; @media (max-width: 768px) { padding: 1.5rem; } `;
-const Button = styled.button`
+const AuthPageContainer = styled.div` 
+display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; background-color: #000; 
+`;
+
+const PageContainer = styled.div` 
+padding: 2.5rem; @media (max-width: 768px) { padding: 1.5rem; } 
+`;
+
+const Button = styled.button` 
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
   width: ${props => props.fullWidth ? '100%' : 'auto'};
   padding: 0.75rem 1rem;
@@ -77,6 +77,7 @@ const Button = styled.button`
   }};
   }
 `;
+
 const Input = styled.input`
   width: 100%; padding: 0.75rem; border-radius: 0.25rem;
   background-color: #121212; border: 1px solid #878787; color: #ffffff;
@@ -173,7 +174,6 @@ const HorizontalScrollContainer = styled.div`
   scrollbar-width: none;
 `;
 
-
 // --- 상단 검색창을 위한 Header 컴포넌트 ---
 const HeaderContainer = styled.header`
   padding: 1.5rem 2.5rem;
@@ -240,7 +240,7 @@ function LoginPage({ setPage, setUser }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('https://testbe1jo.azurewebsites.net/api/auth/login', {
+      const res = await fetch(`${BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -298,7 +298,7 @@ function SignUpPage({ setPage }) {
   const handleSignUp = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('https://testbe1jo.azurewebsites.net/api/auth/signup', {
+      const res = await fetch(`${BASE_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, nickname })
@@ -360,12 +360,13 @@ function HomePage({ user }) {
   );
 }
 
-function PublicPlaylistsPage({ playlists, setPage, setContext }) {
+function PublicPlaylistsPage({ setPage, setContext }) {
   const [publicPlaylists, setPublicPlaylists] = useState([]);
   useEffect(() => {
-    fetch('https://testbe1jo.azurewebsites.net/api/playlists/public')
+    fetch(`${BASE_URL}/api/playlists/public`)
       .then(res => res.json())
       .then(data => {
+        // console.log("Public Playlists Data:", data);
         // 서버 필드명 변환
         setPublicPlaylists(Array.isArray(data)
           ? data.map(p => ({
@@ -373,14 +374,18 @@ function PublicPlaylistsPage({ playlists, setPage, setContext }) {
             name: p.name,
             description: p.description,
             creatorNickname: p.creator_nickname,
+            albumImageUrl: p.album_image_url,
           }))
           : []);
       })
       .catch(() => setPublicPlaylists([]));
   }, []);
-  const handlePlaylistClick = (playlistId) => {
-    setContext({ playlistId });
-    setPage('playlistDetail');
+  const handlePlaylistClick = (playlist) => { // 매개변수를 playlistId에서 playlist 객체 전체로 변경
+  setContext({ 
+    playlistId: playlist.id, 
+    creatorNickname: playlist.creatorNickname // 생성자 닉네임 추가
+  });
+  setPage('playlistDetail');
   };
 
   return (
@@ -389,9 +394,9 @@ function PublicPlaylistsPage({ playlists, setPage, setContext }) {
       {publicPlaylists.length > 0 ? (
         <Grid>
           {publicPlaylists.map(playlist => (
-            <PlaylistItem key={playlist.id} onClick={() => handlePlaylistClick(playlist.id)}>
+            <PlaylistItem key={playlist.id} onClick={() => handlePlaylistClick(playlist)}> 
               <div className="image-container">
-                <img src={`https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(playlist.name[0])}`} alt={playlist.name} />
+                <img src={playlist.albumImageUrl ? playlist.albumImageUrl : `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(playlist.name[0])}`} alt={playlist.name} />
                 <div className="overlay"><h3>{playlist.name}</h3></div>
               </div>
               <p>by {playlist.creatorNickname}</p>
@@ -408,11 +413,11 @@ function PublicPlaylistsPage({ playlists, setPage, setContext }) {
   );
 }
 
-function MyPlaylistsPage({ playlists, user, setPage, setContext }) {
+function MyPlaylistsPage({ user, setPage, setContext }) {
   const [myPlaylists, setMyPlaylists] = useState([]);
   useEffect(() => {
     if (!user?.token) return;
-    fetch('https://testbe1jo.azurewebsites.net/api/playlists/mine', {
+    fetch(`${BASE_URL}/api/playlists/mine`, {
       headers: { 'Authorization': `Bearer ${user.token}` }
     })
       .then(res => res.json())
@@ -422,16 +427,22 @@ function MyPlaylistsPage({ playlists, user, setPage, setContext }) {
           ? data.map(p => ({
             id: p.playlist_id,
             name: p.name,
+            albumImageUrl: p.album_image_url,
             songs: Array(p.song_count).fill({}), // song_count만 있으므로 빈 배열로 대체
           }))
           : []);
       })
       .catch(() => setMyPlaylists([]));
   }, [user]);
+
   const handlePlaylistClick = (playlistId) => {
-    setContext({ playlistId });
-    setPage('playlistDetail');
+  setContext({ 
+    playlistId: playlistId,
+    creatorNickname: user.nickname // 현재 로그인한 사용자의 닉네임 추가
+  });
+  setPage('playlistDetail');
   };
+  
   return (
     <PageContainer>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -443,7 +454,7 @@ function MyPlaylistsPage({ playlists, user, setPage, setContext }) {
           {myPlaylists.map(playlist => (
             <PlaylistItem key={playlist.id} onClick={() => handlePlaylistClick(playlist.id)}>
               <div className="image-container">
-                <img src={`https://placehold.co/300x300/8b5cf6/ffffff?text=${encodeURI(playlist.name[0])}`} alt={playlist.name} />
+                <img src={playlist.albumImageUrl ? playlist.albumImageUrl : `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(playlist.name[0])}`} alt={playlist.name} />
                 <div className="overlay"><h3>{playlist.name}</h3></div>
               </div>
               <p>{playlist.songs.length}곡</p>
@@ -461,20 +472,22 @@ function MyPlaylistsPage({ playlists, user, setPage, setContext }) {
   );
 }
 
-function PlaylistDetailPage({ setPage, context, user, playlists, deletePlaylist }) {
+function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
   const [playlist, setPlaylist] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [editPublic, setEditPublic] = useState(false);
   const [error, setError] = useState('');
+  const [youtubePlayer, setYoutubePlayer] = useState({ isOpen: false, loading: false, currentIndex: 0, videoIds: [] });
 
   const playlistId = context?.playlistId;
   useEffect(() => {
     if (!playlistId) return;
-    fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlistId}`)
+    fetch(`${BASE_URL}/api/playlists/${playlistId}`)
       .then(res => res.json())
       .then(data => {
+        // console.log("Data:", data);
         // 서버 필드명 변환
         if (!data || !data.playlist_id) {
           setPlaylist(null);
@@ -514,7 +527,7 @@ function PlaylistDetailPage({ setPage, context, user, playlists, deletePlaylist 
   const handleSongDelete = async (songId) => {
     if (!window.confirm('이 곡을 삭제하시겠습니까?')) return;
     try {
-      const res = await fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlist.id}/songs/${songId}`, {
+      const res = await fetch(`${BASE_URL}/api/playlists/${playlist.id}/songs/${songId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${user.token}` }
       });
@@ -532,7 +545,7 @@ function PlaylistDetailPage({ setPage, context, user, playlists, deletePlaylist 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlist.id}`, {
+      const res = await fetch(`${BASE_URL}/api/playlists/${playlist.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -550,6 +563,57 @@ function PlaylistDetailPage({ setPage, context, user, playlists, deletePlaylist 
       setError('수정 중 오류 발생');
     }
   };
+
+    // --- 유튜브 재생 처리 함수 ---  
+  const handlePlayYoutube = async () => {
+    if (!playlist || playlist.songs.length === 0) {
+      alert('재생할 곡이 없습니다.');
+      return;
+    }
+    setYoutubePlayer({ isOpen: true, loading: true, currentIndex: 0, videoIds: [] });
+    // 모든 곡의 제목+아티스트로 유튜브 영상 검색
+    try {
+      const videoIds = [];
+      for (const song of playlist.songs) {
+        const res = await fetch(`${BASE_URL}/api/youtube/ytsearch?q=${encodeURIComponent(song.title + ' ' + song.artist)}`);
+        const data = await res.json();
+        if (data.success && data.link) {
+          // 유튜브 videoId 추출
+          const match = data.link.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
+          if (match && match[1]) {
+            videoIds.push(match[1]);
+          } else {
+            videoIds.push(null);
+          }
+        } else {
+          videoIds.push(null);
+        }
+      }
+      if (videoIds.filter(Boolean).length === 0) {
+        setYoutubePlayer({ isOpen: false, loading: false, currentIndex: 0, videoIds: [] });
+        alert('유튜브 영상을 찾을 수 없습니다.');
+        return;
+      }
+      setYoutubePlayer({ isOpen: true, loading: false, currentIndex: 0, videoIds });
+    } catch {
+      setYoutubePlayer({ isOpen: false, loading: false, currentIndex: 0, videoIds: [] });
+      alert('유튜브 영상 검색 중 오류가 발생했습니다.');
+    }
+  };
+
+  const YoutubePlayerWrapper = styled.div`
+    position: fixed;
+    right: 2rem;
+    bottom: 2rem;
+    z-index: 1000;
+    background: #18181b;
+    border-radius: 1rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  `;
 
   const SongItem = styled.div`
       display: flex; align-items: center; padding: 0.75rem; border-radius: 0.5rem;
@@ -591,7 +655,7 @@ function PlaylistDetailPage({ setPage, context, user, playlists, deletePlaylist 
   return (
     <PageContainer>
       <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', alignItems: 'flex-end' }}>
-        <img src={`https://placehold.co/300x300/f97316/ffffff?text=${encodeURI(playlist.name[0])}`} alt={playlist.name} style={{ width: '12rem', height: '12rem', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
+        <img src={playlist.songs[0].albumImageUrl ? playlist.songs[0].albumImageUrl : `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(playlist.name[0])}`} alt={playlist.name} style={{ width: '12rem', height: '12rem', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
         <div>
           <p style={{ fontSize: '0.875rem', color: '#94a3b8' }}>플레이리스트</p>
           <h1 style={{ fontSize: '3rem', fontWeight: 'bold', margin: '0.5rem 0' }}>{playlist.name}</h1>
@@ -607,18 +671,68 @@ function PlaylistDetailPage({ setPage, context, user, playlists, deletePlaylist 
       </div>
       {isOwner ? (
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-          <Button onClick={() => setEditMode(true)}>정보 수정</Button>
-          <Button onClick=""><PlayIcon /> 재생하기</Button>
-          {/* <iframe src="https://www.youtube.com/embed/{videoId}" ... /> */}
-          {/* https://joypinkgom.tistory.com/229?category=874360 유튜브 API 사용해야함.. 할당량.. */}
+          <Button onClick={handlePlayYoutube}><PlayIcon /> 재생하기</Button>
+
           <Button onClick={() => setPage('search')}><PlusIcon /> 곡 추가하기</Button>
+          <Button onClick={""}><ShareIcon /> 공유하기</Button>
+          <Button onClick={() => setEditMode(true)}><EditIcon/>정보 수정</Button>
           <Button danger onClick={handleDelete}><TrashIcon /> 삭제하기</Button>
         </div>
       ) : (
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-          <Button onClick=""><PlusIcon /> 재생하기</Button>
+          <Button onClick={handlePlayYoutube}><PlayIcon /> 재생하기</Button>
         </div>
       )}
+
+      {/* 유튜브 플레이어 (youtubePlayer.isOpen이 true일 때만 렌더링) */}
+      {youtubePlayer.isOpen && (
+        <YoutubePlayerWrapper>
+          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', alignSelf: 'flex-start' }}>
+            {playlist.songs[youtubePlayer.currentIndex]?.title} - {playlist.songs[youtubePlayer.currentIndex]?.artist}
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
+            <Button type="button" secondary style={{ fontSize: '0.8rem', padding: '0.2rem 0.7rem' }}
+              onClick={() => setYoutubePlayer(prev => ({ ...prev, currentIndex: Math.max(0, prev.currentIndex - 1) }))}
+              disabled={youtubePlayer.currentIndex === 0}
+            >이전곡</Button>
+            <Button type="button" secondary style={{ fontSize: '0.8rem', padding: '0.2rem 0.7rem' }}
+              onClick={() => setYoutubePlayer(prev => ({ ...prev, currentIndex: Math.min(playlist.songs.length - 1, prev.currentIndex + 1) }))}
+              disabled={youtubePlayer.currentIndex >= playlist.songs.length - 1}
+            >다음곡</Button>
+            <Button type="button" secondary style={{ fontSize: '0.8rem', padding: '0.2rem 0.7rem' }}
+              onClick={() => setYoutubePlayer({ ...youtubePlayer, isOpen: false })}
+            >닫기</Button>
+          </div>
+          {youtubePlayer.loading ? (
+            <div style={{ color: '#fff', padding: '1rem' }}>로딩 중...</div>
+          ) : youtubePlayer.videoIds.length > 0 && youtubePlayer.videoIds[youtubePlayer.currentIndex] ? (
+            <YouTube
+              videoId={youtubePlayer.videoIds[youtubePlayer.currentIndex]}
+              opts={{ width: 500, height: 500, playerVars: { autoplay: 1 } }}
+              onEnd={() => {
+                if (youtubePlayer.currentIndex < youtubePlayer.videoIds.length - 1) {
+                  setYoutubePlayer(prev => ({ ...prev, currentIndex: prev.currentIndex + 1 }));
+                } else {
+                  setYoutubePlayer(prev => ({ ...prev, isOpen: false }));
+                }
+              }}
+              onError={() => {
+                // 에러 시 다음 곡으로 넘어감
+                if (youtubePlayer.currentIndex < youtubePlayer.videoIds.length - 1) {
+                  setYoutubePlayer(prev => ({ ...prev, currentIndex: prev.currentIndex + 1 }));
+                } else {
+                  setYoutubePlayer(prev => ({ ...prev, isOpen: false }));
+                }
+              }}
+              style={{ borderRadius: '0.5rem', background: '#000' }}
+            />
+          ) : (
+            <div style={{ color: '#fff', padding: '1rem' }}>재생할 영상이 없습니다.</div>
+          )}
+        </YoutubePlayerWrapper>
+      )}
+
+
       <div>
         {playlist.songs.map((song, index) => (
           <SongItem key={song.id}>
@@ -651,7 +765,7 @@ function CreatePlaylistPage({ setPage, user }) {
       is_public: formData.get('is_public') === 'on',
     };
     try {
-      const res = await fetch('https://testbe1jo.azurewebsites.net/api/playlists', {
+      const res = await fetch(`${BASE_URL}/api/playlists`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -709,7 +823,7 @@ function SearchPage({ context, user }) {
 
   useEffect(() => {
     if (user?.token) {
-      fetch('https://testbe1jo.azurewebsites.net/api/playlists/mine', {
+      fetch(`${BASE_URL}/api/playlists/mine`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
         .then(res => res.json())
@@ -726,7 +840,7 @@ function SearchPage({ context, user }) {
     if (searchTerm) {
       setLoading(true);
       setError('');
-      fetch(`https://testbe1jo.azurewebsites.net/api/songs/search?q=${encodeURIComponent(searchTerm)}`)
+      fetch(`${BASE_URL}/api/songs/search?q=${encodeURIComponent(searchTerm)}`)
         .then(res => res.json())
         .then(data => {
           if (data.success && Array.isArray(data.items)) {
@@ -759,7 +873,7 @@ function SearchPage({ context, user }) {
     setAddStatus('');
     try {
       // song_id 조회: spotifyUrl로 서버에 요청
-      const res = await fetch(`https://testbe1jo.azurewebsites.net/api/songs/by-spotify-url?spotifyUrl=${encodeURIComponent(song.spotifyUrl)}`);
+      const res = await fetch(`${BASE_URL}/api/songs/by-spotify-url?spotifyUrl=${encodeURIComponent(song.spotifyUrl)}`);
       const data = await res.json();
       if (!data.song_id) {
         setAddStatus('곡 정보를 찾을 수 없습니다.');
@@ -767,7 +881,7 @@ function SearchPage({ context, user }) {
         return;
       }
       // 곡 추가 API 호출
-      const addRes = await fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlistId}/songs`, {
+      const addRes = await fetch(`${BASE_URL}/api/playlists/${playlistId}/songs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -846,103 +960,6 @@ function SearchPage({ context, user }) {
   );
 }
 
-// --- Spotify Web Playback Player 컴포넌트 ---
-/*
-const PlayerContainer = styled.div`
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100vw;
-  background: #18181b;
-  color: #fff;
-  box-shadow: 0 -2px 16px rgba(0,0,0,0.15);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 2rem;
-  min-height: 72px;
-`;
-
-function Player({ accessToken }) {
-  const [player, setPlayer] = useState(null);
-  const [isPaused, setIsPaused] = useState(true);
-  const [track, setTrack] = useState(null);
-  const [volume, setVolume] = useState(0.5);
-  const [deviceId, setDeviceId] = useState(null);
-
-  // SDK 스크립트 로드
-  useEffect(() => {
-    function setupPlayer() {
-      if (!accessToken) return;
-      const spotifyPlayer = new window.Spotify.Player({
-        name: 'MyMusic Web Player',
-        getOAuthToken: cb => { cb(accessToken); },
-        volume: 0.5,
-      });
-      setPlayer(spotifyPlayer);
-      spotifyPlayer.addListener('ready', ({ device_id }) => {
-        setDeviceId(device_id);
-      });
-      spotifyPlayer.addListener('not_ready', () => {
-        setDeviceId(null);
-      });
-      spotifyPlayer.addListener('player_state_changed', state => {
-        setIsPaused(state.paused);
-        if (state.track_window && state.track_window.current_track) {
-          setTrack(state.track_window.current_track);
-        }
-      });
-      spotifyPlayer.connect();
-    }
-    if (window.Spotify) {
-      setupPlayer();
-    } else {
-      const script = document.createElement('script');
-      script.src = 'https://sdk.scdn.co/spotify-player.js';
-      script.async = true;
-      document.body.appendChild(script);
-      window.onSpotifyWebPlaybackSDKReady = setupPlayer;
-    }
-  }, [accessToken]);
-
-  // 볼륨 조절
-  useEffect(() => {
-    if (player) player.setVolume(volume);
-  }, [volume, player]);
-
-  // 재생/일시정지 토글
-  const handlePlayPause = () => {
-    if (player) {
-      isPaused ? player.resume() : player.pause();
-    }
-  };
-
-  if (!accessToken || !player) {
-    console.log('No access token or player not initialized');
-    return null;
-  }
-
-  return (
-    <PlayerContainer>
-      {track ? (
-        <>
-          <img src={track.album.images[0]?.url} alt={track.name} style={{width: 56, height: 56, borderRadius: 8, marginRight: 16}} />
-          <div style={{flexGrow: 1}}>
-            <div style={{fontWeight: 700}}>{track.name}</div>
-            <div style={{fontSize: '0.9rem', color: '#a3a3a3'}}>{track.artists.map(a => a.name).join(', ')}</div>
-          </div>
-        </>
-      ) : (
-        <div style={{flexGrow: 1, color: '#a3a3a3'}}>재생 중인 곡 없음</div>
-      )}
-      <button onClick={handlePlayPause} style={{background: 'none', border: 'none', color: '#fff', fontSize: 24, marginRight: 24}}>
-        {isPaused ? '▶️' : '⏸️'}
-      </button>
-      <input type="range" min={0} max={1} step={0.01} value={volume} onChange={e => setVolume(Number(e.target.value))} style={{width: 120}} />
-    </PlayerContainer>
-  );
-}
-*/
 // --- 페이지 상태를 history와 연동
 function usePageWithHistory(initialPage) {
   const [page, setPageState] = useState(initialPage);
@@ -970,14 +987,52 @@ export default function App() {
   const [page, setPage] = usePageWithHistory('home');
   const [user, setUser] = useState(null);
   const [context, setContext] = useState({});
-  const [playlists, setPlaylists] = useState([]);
-  const [spotifyToken, setSpotifyToken] = useState(null);
+
+  useEffect(() => {
+  let title = 'MyMusic'; // 기본 타이틀
+  switch (page) {
+    case 'home':
+      title = '홈 - MyMusic';
+      break;
+    case 'login':
+      title = '로그인 - MyMusic';
+      break;
+    case 'signup':
+      title = '회원가입 - MyMusic';
+      break;
+    case 'publicPlaylists':
+      title = '공개 플레이리스트 - MyMusic';
+      break;
+    case 'myPlaylists':
+      title = '내 플레이리스트 - MyMusic';
+      break;
+    case 'createPlaylist':
+      title = '새 플레이리스트 만들기 - MyMusic';
+      break;
+    case 'playlistDetail':
+      // 상세 페이지의 경우, 로딩 전/후를 고려하여 간단한 제목을 설정할 수 있습니다.
+      // 더 나아가 context에 플레이리스트 이름을 담아와서 표시할 수도 있습니다.
+      title = '플레이리스트 상세 - MyMusic';
+      break;
+    case 'search':
+      // 검색 페이지의 경우, 검색어를 제목에 포함시켜줍니다.
+      if (context.searchTerm) {
+        title = `검색: ${context.searchTerm} - MyMusic`;
+      } else {
+        title = '검색 - MyMusic';
+      }
+      break;
+    default:
+      title = 'MyMusic';
+  }
+  document.title = title;}, [page, context]
+  );
 
   // 로그인 상태 복원: localStorage에 토큰이 있으면 서버에서 사용자 정보 받아오기
   useEffect(() => {
     const token = localStorage.getItem('jwt_token');
     if (token && !user) {
-      fetch('https://testbe1jo.azurewebsites.net/api/auth/me', {
+      fetch(`${BASE_URL}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -999,23 +1054,11 @@ export default function App() {
     }
   }, []);
 
-  // Spotify access token 백엔드에서 받아오기
-  /*
-  useEffect(() => {
-    if (user) {
-      fetch('/api/spotify/token')
-        .then(res => res.json())
-        .then(data => {
-          if (data.accessToken) setSpotifyToken(data.accessToken);
-        });
-    }
-  }, [user]);
-*/
   // 플레이리스트 삭제 함수 구현
   const deletePlaylist = async (playlistId) => {
     if (!user?.token) return;
     try {
-      const res = await fetch(`https://testbe1jo.azurewebsites.net/api/playlists/${playlistId}`, {
+      const res = await fetch(`${BASE_URL}/api/playlists/${playlistId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${user.token}`,
@@ -1089,9 +1132,9 @@ export default function App() {
       case 'home': return <HomePage user={user} />;
       case 'login': return <LoginPage setPage={setPage} setUser={handleLoginSuccess} />;
       case 'signup': return <SignUpPage setPage={setPage} />;
-      case 'publicPlaylists': return <PublicPlaylistsPage playlists={playlists} setPage={setPage} setContext={setContext} />;
-      case 'myPlaylists': return <MyPlaylistsPage playlists={playlists} user={user} setPage={setPage} setContext={setContext} />;
-      case 'playlistDetail': return <PlaylistDetailPage setPage={setPage} context={context} user={user} playlists={playlists} deletePlaylist={deletePlaylist} />;
+      case 'publicPlaylists': return <PublicPlaylistsPage setPage={setPage} setContext={setContext} />;
+      case 'myPlaylists': return <MyPlaylistsPage user={user} setPage={setPage} setContext={setContext} />;
+      case 'playlistDetail': return <PlaylistDetailPage setPage={setPage} context={context} user={user} deletePlaylist={deletePlaylist} />;
       case 'createPlaylist': return <CreatePlaylistPage setPage={setPage} user={user} />;
       case 'search': return <SearchPage context={context} user={user} />;
       default: return <LoginPage setPage={setPage} setUser={handleLoginSuccess} />;
@@ -1113,7 +1156,7 @@ export default function App() {
             <NavList>
               <NavItem active={page === 'home'} onClick={() => setPage('home')}><HomeIcon /><span>홈</span></NavItem>
               <NavItem active={page === 'publicPlaylists'} onClick={() => setPage('publicPlaylists')}><GlobeIcon /><span>공개 플레이리스트</span></NavItem>
-              <NavItem active={['myPlaylists', 'createPlaylist', 'playlistDetail'].includes(page) && page !== 'publicPlaylists'} onClick={() => setPage('myPlaylists')}><PlaylistIcon /><span>내 플레이리스트</span></NavItem>
+              <NavItem active={page === 'myPlaylists' || page === 'createPlaylist' || (page === 'playlistDetail' && context.creatorNickname === user?.nickname)} onClick={() => setPage('myPlaylists')}><PlaylistIcon /><span>내 플레이리스트</span></NavItem>
             </NavList>
             <div style={{ marginTop: 'auto' }}>
               {user ? (
@@ -1138,7 +1181,6 @@ export default function App() {
               {renderPage()}
             </PageWrapper>
           </MainContent>
-          {user && spotifyToken && <Player accessToken={spotifyToken} />}
         </AppContainer>
       )}
     </>
