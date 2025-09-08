@@ -58,3 +58,17 @@ CREATE TABLE `Playlist_Songs` (
     FOREIGN KEY (`song_id`) REFERENCES `Songs`(`song_id`) ON DELETE CASCADE,
     UNIQUE KEY `uk_playlist_song` (`playlist_id`, `song_id`) -- 한 플레이리스트에 동일한 곡이 중복 추가되는 것을 방지
 ) COMMENT='플레이리스트-곡 연결 테이블';
+
+-- =================================================================
+-- PlaybackHistory Table: 사용자별 곡 재생 기록 저장
+-- =================================================================
+CREATE TABLE `PlaybackHistory` (
+    `history_id` INT NOT NULL AUTO_INCREMENT COMMENT '기록 ID',
+    `user_id` INT NOT NULL COMMENT '사용자 ID (Users 테이블 참조)',
+    `song_id` INT NOT NULL COMMENT '곡 ID (Songs 테이블 참조)',
+    `played_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '마지막 재생 시각',
+    PRIMARY KEY (`history_id`),
+    FOREIGN KEY (`user_id`) REFERENCES `Users`(`user_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`song_id`) REFERENCES `Songs`(`song_id`) ON DELETE CASCADE,
+    UNIQUE KEY `uk_user_song` (`user_id`, `song_id`) -- 한 사용자가 동일한 곡을 여러 번 기록하지 않도록 설정
+) COMMENT='사용자 재생 기록 테이블';

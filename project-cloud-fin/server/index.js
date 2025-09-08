@@ -48,10 +48,7 @@ const dbConfig = {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     ssl: {ca: fs.readFileSync(path.join(__dirname, 'certs/DigiCertGlobalRootG2.crt.pem'), 'utf-8'),
-        
-        // 이 옵션이 HeidiSQL의 "Verify CA and hostname identity"와 동일한 역할을 합니다.
-        // 서버 인증서의 유효성을 검증하며, 보안을 위해 반드시 true로 설정해야 합니다.
-      rejectUnauthorized: true 
+        rejectUnauthorized: true 
     }
 };
 
@@ -549,6 +546,62 @@ shareRouter.get('/playlist/:id', async (req, res) => {
 });
 
 app.use('/api/share', shareRouter);
+
+// =================================================================
+// 5. 재생 기록 관련 API (History) - 새로 추가하는 부분
+// =================================================================
+const historyRouter = express.Router();
+
+// [POST] /api/history/play - 재생 기록 저장 (인증 필요)
+historyRouter.post('/play', authenticateToken, async (req, res) => {
+    const { userId } = req.user;
+    const { songId } = req.body;
+
+    if (!songId) {
+        return res.status(400).json({ message: 'songId가 필요합니다.' });
+    }
+
+    try {
+        // ON DUPLICATE KEY UPDATE 문법으로 INSERT와 UPDATE를 한 번에 처리
+        // uk_user_song 제약 조건 때문에 user_id와 song_id가 중복되면 played_at만 현재 시간으로 업데이트됩니다.
+        await pool.query(
+            `INSERT INTO PlaybackHistory (user_id, song_id) VALUES (?, ?)
+             ON DUPLICATE KEY UPDATE played_at = CURRENT_TIMESTAMP`,
+            [userId, songId]
+        );
+        res.status(201).json({ message: '재생 기록 저장 성공' });
+    } catch (err) {
+        console.error('재생 기록 저장 실패:', err);
+        res.status(500).json({ message: '재생 기록 저장 실패', error: err.message });
+    }
+});
+
+// [GET] /api/history/recent - 최근 재생 목록 조회 (인증 필요)
+historyRouter.get('/recent', authenticateToken, async (req, res) => {
+    const { userId } = req.user;
+    const limit = parseInt(req.query.limit) || 6; // 기본 6개 항목
+
+    try {
+        const [rows] = await pool.query(`
+            SELECT 
+                s.song_id,
+                s.track_name,
+                s.artist,
+                s.album_image_url
+            FROM PlaybackHistory ph
+            JOIN Songs s ON ph.song_id = s.song_id
+            WHERE ph.user_id = ?
+            ORDER BY ph.played_at DESC
+            LIMIT ?
+        `, [userId, limit]);
+        res.json(rows);
+    } catch (err) {
+        console.error('최근 재생 목록 조회 실패:', err);
+        res.status(500).json({ message: '최근 재생 목록 조회 실패', error: err.message });
+    }
+});
+
+app.use('/api/history', historyRouter);
 
 
 // =================================================================
