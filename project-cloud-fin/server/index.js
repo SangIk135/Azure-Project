@@ -20,6 +20,7 @@ const cors = require('cors');
 const mysql = require('mysql2/promise');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const spotifyWebApi = require('spotify-web-api-node');
 require('dotenv').config();
 
 // Express 애플리케이션을 생성합니다.
@@ -90,7 +91,10 @@ const connectToDatabase = async () => {
 connectToDatabase(); // 서버 시작 시 DB 연결 함수 호출
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
+const spotifyApi = new spotifyWebApi({
+    clientId: process.env.SPOTIFY_CLIENT_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+});
 // --- 인증 미들웨어 ---
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -174,6 +178,36 @@ authRouter.get('/me', authenticateToken, async (req, res) => {
 // 2. 플레이리스트 관련 API (Playlists)
 // -----------------------------------------------------------------
 const playlistRouter = express.Router();
+
+const shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // 값 교환
+    }
+    return array;
+};
+
+playlistRouter.get('/new-releases', async (req, res) => {
+    try {
+        const tokenData = await spotifyApi.clientCredentialsGrant();
+        spotifyApi.setAccessToken(tokenData.body['access_token']);
+        const newReleases = await spotifyApi.getNewReleases({ limit: 50, offset: 0, country: 'KR' });
+        const randomAlbums = shuffleArray(newReleases.body.albums?.items || []).slice(0, 5);
+        // 필요한 정보만 추려서 반환
+        const albums = randomAlbums.map(album => ({
+            id: album.id,
+            name: album.name,
+            imageUrl: album.images?.[0]?.url || '',
+            releaseDate: album.release_date,
+            artist: album.artists?.[0]?.name || '',
+            artistId: album.artists?.[0]?.id || '',
+            spotifyUrl: album.external_urls?.spotify || '',
+        }));
+        res.json({ success: true, albums });
+    } catch (error) {
+        res.status(500).json({ message: '서버 오류', error: error.message });
+    }
+});
 
 // [GET] /api/playlists/public - 공개 플레이리스트 목록 조회 (수정된 코드)
 playlistRouter.get('/public', async (req, res) => {
@@ -464,7 +498,7 @@ songRouter.get('/by-spotify-url', async (req, res) => {
 
 const youtubeRouter = express.Router();
 
-// [GET] /api/youtube/search?q=검색어
+// [GET] /api/youtube/ytsearch?q=검색어
 youtubeRouter.get('/ytsearch', async (req, res) => {
     // 곡명과 아티스트명을 각각 받음
     const title = req.query.title;

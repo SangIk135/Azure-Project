@@ -120,7 +120,7 @@ async function spotifySearch({ query, token, type = 'track', limit = 10 }) {
             try {
                 const youtubeResult = await youtubesearchapi.GetListByKeyword(youtubeQuery, false, 1, []);
                 // 구조 확인용 로그
-                console.log('YouTube API result:', JSON.stringify(youtubeResult));
+                // console.log('YouTube API result:', JSON.stringify(youtubeResult));
                 // 구조별로 id 추출
                 if (youtubeResult && Array.isArray(youtubeResult.items) && youtubeResult.items.length > 0) {
                     youtubeUrl = `https://www.youtube.com/watch?v=${youtubeResult.items[0].id}`;

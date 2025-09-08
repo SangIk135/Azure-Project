@@ -19,16 +19,16 @@ const GlobalStyle = createGlobalStyle`
   ::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
 `;
 
-const mockPopularArtists = [
-  { id: 'artist-1', name: 'G-DRAGON', imageUrl: 'https://entertainimg.kbsmedia.co.kr/cms/uploads/PERSON_20241031091116_2e82077ae7a8a43736b41703763e8f0f.png' },
-  { id: 'artist-2', name: 'aespa', imageUrl: 'https://i.namu.wiki/i/5Wzn3EtyCSm2SoKJoKJtIGCyiDXTRJVsyD1tPjT18Deutt9xTdSJ06vxCdyJKT24fSDL-DEO3hGi6Ze5fHvFGaoD2aTMVfHOpIW2cYUpzn-BYqaRJ5dQzYSZHQEsRZ3vrEXtGyfJD5ToK8B3yYR72Q.webp' },
-  { id: 'artist-3', name: 'DAY6', imageUrl: 'https://i.namu.wiki/i/CYt-yDk2itJ19Yw7VYBbUA1196ugumckQ_4ZNdnI3DxOT5B19LSPklR1D9lCf-e4hBdNOAtA_MeW5kOXrfVA2663ySMsAgQjtbRC-uqpAhhEDSjLcf5L07vGgPtGnHnwAhTQao8NFG9zAEh6SeP6kQ.webp' },
-  { id: 'artist-4', name: 'NewJeans', imageUrl: 'https://i.namu.wiki/i/VTGtQ4mnc5m6dTjDBj0nR2qbC_PnGx6_pon074XjMdtDQZ396q8t7YP3o4WGOhxfjEE9IaxTUc9s9chR4oWtZNR7xgvvpB8q1a5mRlDmP1ce-uFXqrPhvJb-Cd908gtfOZsHX5Jy-j4w1izJ99uKfQ.webp' },
-  { id: 'artist-5', name: 'LE SSERAFIM', imageUrl: 'https://i.namu.wiki/i/l3qeMqu_QPK7qZyKPLVjM8xkrraPzhwbktOVrKDDZ0in0O0Osdbpio2gdwpkgQWHzT6NNV_Y-VFd7QizVIFkjNWq5EgztdVOqL_Q7hskM7tn_qIDYexYX_6P7vUSAIMNpFtlxmtNxzS-yXK-RK949A.webp' },
-  { id: 'artist-6', name: 'fromis_9', imageUrl: 'https://i.namu.wiki/i/8g2tMZXWYJYRYTk9EPJeojrP0p64aNkgBnLmH6VnIlzeIDVqB3eWIs6l9RdrtulpXHQqXe8VzTcKwxJjat52Hi2hPw00C6MRiSRjjhAepnSUkwCAFb51fGdsrH1vtcTTKQt08zERx-nZ9J4U-puDWg.webp' },
-  { id: 'artist-7', name: 'IVE', imageUrl: 'https://i.namu.wiki/i/dbYaykrNkUTz5RZOfjwQjU38vmA6zORYe_H60qH17Sl_PJ-oXcqvGPyuyJu6HKcDJuMqQdq--y6JPabC0QZzDA.webp' },
-  { id: 'artist-8', name: 'IU', imageUrl: 'https://i.namu.wiki/i/4QgMOyARoHdSLoFDRgiDsyQ9Gg-j3b_mEj2rQ4zdwPoY4qp8hL7rWGFV2KO1AJcGrBAHeN82ajOn-XqlUXSY2Xvk8yGU7oKLs0QbvUWQenPDCUKjP8tMRg9y6SQVtSqsmY97gJ5NEbCqrXPosiQlFA.webp' },
-];
+// const mockPopularArtists = [
+//   { id: 'artist-1', name: 'G-DRAGON', imageUrl: 'https://entertainimg.kbsmedia.co.kr/cms/uploads/PERSON_20241031091116_2e82077ae7a8a43736b41703763e8f0f.png' },
+//   { id: 'artist-2', name: 'aespa', imageUrl: 'https://i.namu.wiki/i/5Wzn3EtyCSm2SoKJoKJtIGCyiDXTRJVsyD1tPjT18Deutt9xTdSJ06vxCdyJKT24fSDL-DEO3hGi6Ze5fHvFGaoD2aTMVfHOpIW2cYUpzn-BYqaRJ5dQzYSZHQEsRZ3vrEXtGyfJD5ToK8B3yYR72Q.webp' },
+//   { id: 'artist-3', name: 'DAY6', imageUrl: 'https://i.namu.wiki/i/CYt-yDk2itJ19Yw7VYBbUA1196ugumckQ_4ZNdnI3DxOT5B19LSPklR1D9lCf-e4hBdNOAtA_MeW5kOXrfVA2663ySMsAgQjtbRC-uqpAhhEDSjLcf5L07vGgPtGnHnwAhTQao8NFG9zAEh6SeP6kQ.webp' },
+//   { id: 'artist-4', name: 'NewJeans', imageUrl: 'https://i.namu.wiki/i/VTGtQ4mnc5m6dTjDBj0nR2qbC_PnGx6_pon074XjMdtDQZ396q8t7YP3o4WGOhxfjEE9IaxTUc9s9chR4oWtZNR7xgvvpB8q1a5mRlDmP1ce-uFXqrPhvJb-Cd908gtfOZsHX5Jy-j4w1izJ99uKfQ.webp' },
+//   { id: 'artist-5', name: 'LE SSERAFIM', imageUrl: 'https://i.namu.wiki/i/l3qeMqu_QPK7qZyKPLVjM8xkrraPzhwbktOVrKDDZ0in0O0Osdbpio2gdwpkgQWHzT6NNV_Y-VFd7QizVIFkjNWq5EgztdVOqL_Q7hskM7tn_qIDYexYX_6P7vUSAIMNpFtlxmtNxzS-yXK-RK949A.webp' },
+//   { id: 'artist-6', name: 'fromis_9', imageUrl: 'https://i.namu.wiki/i/8g2tMZXWYJYRYTk9EPJeojrP0p64aNkgBnLmH6VnIlzeIDVqB3eWIs6l9RdrtulpXHQqXe8VzTcKwxJjat52Hi2hPw00C6MRiSRjjhAepnSUkwCAFb51fGdsrH1vtcTTKQt08zERx-nZ9J4U-puDWg.webp' },
+//   { id: 'artist-7', name: 'IVE', imageUrl: 'https://i.namu.wiki/i/dbYaykrNkUTz5RZOfjwQjU38vmA6zORYe_H60qH17Sl_PJ-oXcqvGPyuyJu6HKcDJuMqQdq--y6JPabC0QZzDA.webp' },
+//   { id: 'artist-8', name: 'IU', imageUrl: 'https://i.namu.wiki/i/4QgMOyARoHdSLoFDRgiDsyQ9Gg-j3b_mEj2rQ4zdwPoY4qp8hL7rWGFV2KO1AJcGrBAHeN82ajOn-XqlUXSY2Xvk8yGU7oKLs0QbvUWQenPDCUKjP8tMRg9y6SQVtSqsmY97gJ5NEbCqrXPosiQlFA.webp' },
+// ];
 
 // --- 아이콘 컴포넌트 ---
 const MusicIcon = (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>);
@@ -341,12 +341,56 @@ function SignUpPage({ setPage }) {
   );
 }
 
-function HomePage({ user }) {
+function HomePage({ user, setPage, setContext }) {
+  const [albums, setAlbums] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${BASE_URL}/api/playlists/new-releases`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.albums)) {
+          setAlbums(data.albums);
+        } else {
+          setAlbums([]);
+        }
+      })
+      .catch(() => setAlbums([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleAlbumClick = (album) => {
+    // 앨범명 + 아티스트명으로 검색 페이지 이동
+    setContext({ searchTerm: `${album.name} ${album.artist}` });
+    setPage('search');
+  };
+
   return (
     <PageContainer>
-      <h1 style={{ fontSize: '1.875rem', fontWeight: '700', marginBottom: '0.5rem' }}>안녕하세요, {user ? user.nickname : '방문자'}님!</h1>
-      <p style={{ color: '#94a3b8', marginBottom: '2.5rem' }}>좌측 공개 플레이리스트에서 다른 사용자들의 플레이리스트를 둘러보세요.</p>
-      <SectionTitle>인기 아티스트</SectionTitle>
+      <h1 style={{ fontSize: '1.875rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+        안녕하세요, {user ? user.nickname : '방문자'}님!
+      </h1>
+      <p style={{ color: '#94a3b8', marginBottom: '2.5rem' }}>
+        좌측 공개 플레이리스트에서 다른 사용자들의 플레이리스트를 둘러보세요.
+      </p>
+      <SectionTitle>랜덤 앨범</SectionTitle>
+      {loading ? (
+        <p style={{ color: '#94a3b8' }}>랜덤 앨범을 불러오는 중...</p>
+      ) : (
+        <Grid>
+          {albums.map(album => (
+            <PlaylistItem key={album.id} onClick={() => handleAlbumClick(album)}>
+              <div className="image-container">
+                <img src={album.imageUrl || `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(album.name[0])}`} alt={album.name} />
+                <div className="overlay"><h3>{album.name}</h3></div>
+              </div>
+              <p>{album.artist} <span style={{ color: '#64748b', fontSize: '0.85em' }}>({album.releaseDate})</span></p>
+            </PlaylistItem>
+          ))}
+        </Grid>
+      )}
+      {/* <SectionTitle>인기 아티스트</SectionTitle>
       <HorizontalScrollContainer>
         {mockPopularArtists.map(artist => (
           <ArtistCard key={artist.id}>
@@ -355,7 +399,7 @@ function HomePage({ user }) {
             <span>아티스트</span>
           </ArtistCard>
         ))}
-      </HorizontalScrollContainer>
+      </HorizontalScrollContainer> */}
     </PageContainer>
   );
 }
@@ -1179,14 +1223,31 @@ export default function App() {
 
   const AppContainer = styled.div` display: flex; min-height: 100vh; @media (max-width: 768px) { flex-direction: column; } `;
   const Sidebar = styled.nav`
-    width: 16rem; background-color: #020617; padding: 1.5rem; flex-shrink: 0;
-    display: flex; flex-direction: column; border-right: 1px solid #1e293b;
-    @media (max-width: 768px) { width: 100%; flex-direction: row; align-items: center; justify-content: space-between; padding: 1rem; box-sizing: border-box; border-right: none; border-bottom: 1px solid #1e293b; }
-  `;
+  width: 16rem; background-color: #020617; padding: 1.5rem; flex-shrink: 0;
+  display: flex; flex-direction: column; border-right: 1px solid #1e293b;
+  
+  height: auto;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) { 
+    width: 100%; flex-direction: row; align-items: center; justify-content: space-between; 
+    padding: 1rem; box-sizing: border-box; border-right: none; 
+    border-bottom: 1px solid #1e293b; 
+    height: auto;
+  } 
+`;
   const NavList = styled.ul`
-    list-style: none; padding: 0; margin: 2.5rem 0 0 0; display: flex; flex-direction: column; gap: 0.5rem;
-    @media (max-width: 768px) { flex-direction: row; gap: 0.5rem; margin: 0; }
-  `;
+  list-style: none; padding: 0; margin: 2.5rem 0 0 0; display: flex; flex-direction: column; gap: 0.5rem;
+  
+  flex-grow: 1;
+  overflow-y: auto;
+
+  @media (max-width: 768px) { 
+    flex-direction: row; gap: 0.5rem; margin: 0;
+    flex-grow: 0;
+    overflow-y: visible;
+  }
+`;
   const NavItem = styled.li`
     display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 0.5rem;
     cursor: pointer; transition: background-color 0.2s, color 0.2s;
@@ -1209,7 +1270,7 @@ export default function App() {
 
   const renderPage = () => {
     switch (page) {
-      case 'home': return <HomePage user={user} />;
+      case 'home': return <HomePage user={user} setPage={setPage} setContext={setContext} />;
       case 'login': return <LoginPage setPage={setPage} setUser={handleLoginSuccess} />;
       case 'signup': return <SignUpPage setPage={setPage} />;
       case 'publicPlaylists': return <PublicPlaylistsPage setPage={setPage} setContext={setContext} />;
