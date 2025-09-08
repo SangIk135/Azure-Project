@@ -1086,6 +1086,23 @@ export default function App() {
     }
   }, []);
 
+    // 앱이 처음 로드될 때 URL 경로를 분석하여 올바른 페이지로 이동시키는 로직
+  useEffect(() => {
+    const path = window.location.pathname; // 현재 URL 경로를 가져옵니다. (예: /playlist/2)
+  
+    // 경로가 /playlist/:id 형식과 일치하는지 확인
+    const playlistMatch = path.match(/^\/playlist\/(\d+)$/);
+  
+    if (playlistMatch && playlistMatch[1]) {
+      const playlistId = playlistMatch[1]; // 숫자 ID 추출
+      setPage('playlistDetail'); // 페이지를 상세 페이지로 설정
+      setContext({ playlistId: playlistId }); // 컨텍스트에 ID 설정
+    }
+    // 여기에 다른 경로에 대한 규칙을 추가할 수도 있습니다.
+    // 예: else if (path === '/my-page') { setPage('myPage'); }
+  
+  }, []); // []를 비워두어 앱이 처음 시작될 때 딱 한 번만 실행되도록 합니다.
+
   // 플레이리스트 삭제 함수 구현
   const deletePlaylist = async (playlistId) => {
     if (!user?.token) return;
