@@ -1,6 +1,8 @@
 const axios = require('axios');
 const fs = require('fs/promises');
 const path = require('path');
+const youtubesearchapi = require("youtube-search-api");
+
 require('dotenv').config();
 
 // --- 환경 변수 및 캐시 경로 설정 ---
@@ -31,13 +33,13 @@ async function findMusicVideo(query) {
     const cacheKey = match ? query : query.toLowerCase().replace(/\s+/g, ' ');
 
     // 2. 캐시 확인
-    try {
-        const cachedResults = JSON.parse(await fs.readFile(RESULT_CACHE_PATH, 'utf-8'));
-        const cachedItem = cachedResults[cacheKey];
-        if (cachedItem && cachedItem.expiryTime > Date.now()) {
-            return cachedItem.videoInfo; // 찾으면 바로 결과 반환
-        }
-    } catch (error) {}
+    // try {
+    //     const cachedResults = JSON.parse(await fs.readFile(RESULT_CACHE_PATH, 'utf-8'));
+    //     const cachedItem = cachedResults[cacheKey];
+    //     if (cachedItem && cachedItem.expiryTime > Date.now()) {
+    //         return cachedItem.videoInfo; // 찾으면 바로 결과 반환
+    //     }
+    // } catch (error) {}
     
     let videoInfo = null;
 
@@ -53,25 +55,18 @@ async function findMusicVideo(query) {
         videoInfo = await findYoutubeMusicVideo(youtubeQuery);
 
         // 신뢰도 높은 결과(Spotify 성공)만 캐시에 저장
-        if (songInfo && videoInfo) {
-             try {
-                let existingCache = {};
-                try { existingCache = JSON.parse(await fs.readFile(RESULT_CACHE_PATH, 'utf-8')); } catch (e) {}
-                existingCache[cacheKey] = { videoInfo, expiryTime: Date.now() + 24 * 60 * 60 * 1000 };
-                await fs.writeFile(RESULT_CACHE_PATH, JSON.stringify(existingCache, null, 2));
-            } catch (e) { console.error("캐시 저장 실패:", e); }
-        }
+        // if (songInfo && videoInfo) {
+        //      try {
+        //         let existingCache = {};
+        //         try { existingCache = JSON.parse(await fs.readFile(RESULT_CACHE_PATH, 'utf-8')); } catch (e) {}
+        //         existingCache[cacheKey] = { videoInfo, expiryTime: Date.now() + 24 * 60 * 60 * 1000 };
+        //         await fs.writeFile(RESULT_CACHE_PATH, JSON.stringify(existingCache, null, 2));
+        //     } catch (e) { console.error("캐시 저장 실패:", e); }
+        // }
     }
 
     return videoInfo; // 최종 결과 반환
 }
-
-// 외부에서 사용할 수 있도록 함수를 export 합니다.
-module.exports = { 
-    findMusicVideo, 
-    getAccessToken,
-    spotifySearch
-};
 
 // --- 내부 헬퍼 함수들 상세 구현 ---
 // (이전 코드의 getAccessToken, spotifySearch, findYoutubeMusicVideo, getYoutubeVideoDetails 함수를 여기에 붙여넣으세요.)
@@ -94,7 +89,6 @@ async function getAccessToken() {
     } catch (error) { console.error('❌ Spotify 토큰 발급 에러'); return null; }
 }
 
-
 async function youtubeSpotifySearch(query, token) {
     try {
         const response = await axios.get('https://api.spotify.com/v1/search', {
@@ -116,16 +110,43 @@ async function spotifySearch({ query, token, type = 'track', limit = 10 }) {
         headers: { Authorization: `Bearer ${token}` }
     });
     const data = await res.json();
+    
     if (!data.tracks || !Array.isArray(data.tracks.items)) return [];
-    // 변환: 프론트엔드에서 기대하는 필드명으로 매핑
-    return data.tracks.items.map(item => ({
-        trackName: item.name,
-        artist: item.artists.map(a => a.name).join(', '),
-        albumName: item.album.name,
-        releaseDate: item.album.release_date,
-        spotifyUrl: item.external_urls.spotify,
-        albumImageUrl: item.album.images[0]?.url || '',
-    }));
+    // YouTube URL을 각 곡에 대해 병렬로 검색
+    const results = await Promise.all(
+        data.tracks.items.map(async item => {
+            const youtubeQuery = `${item.artists.map(a => a.name).join(' ')} ${item.name} Audio`;
+            let youtubeUrl = null;
+            try {
+                const youtubeResult = await youtubesearchapi.GetListByKeyword(youtubeQuery, false, 1, []);
+                // 구조 확인용 로그
+                console.log('YouTube API result:', JSON.stringify(youtubeResult));
+                // 구조별로 id 추출
+                if (youtubeResult && Array.isArray(youtubeResult.items) && youtubeResult.items.length > 0) {
+                    youtubeUrl = `https://www.youtube.com/watch?v=${youtubeResult.items[0].id}`;
+                } else if (
+                    youtubeResult &&
+                    youtubeResult.items &&
+                    Array.isArray(youtubeResult.items.items) &&
+                    youtubeResult.items.items.length > 0
+                ) {
+                    youtubeUrl = `https://www.youtube.com/watch?v=${youtubeResult.items.items[0].id}`;
+                }
+            } catch (err) {
+                console.error('YouTube API error:', err);
+            }
+            return {
+                trackName: item.name,
+                artist: item.artists.map(a => a.name).join(', '),
+                albumName: item.album.name,
+                releaseDate: item.album.release_date,
+                spotifyUrl: item.external_urls.spotify,
+                youtubeUrl,
+                albumImageUrl: item.album.images[0]?.url || '',
+            };
+        })
+    );
+    return results;
 }
 
 async function findYoutubeMusicVideo(query) {
@@ -158,6 +179,7 @@ async function findYoutubeMusicVideo(query) {
         return null;
     }
 }
+
 async function getYoutubeVideoDetails(videoId) {
     try {
         const response = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
@@ -173,3 +195,10 @@ async function getYoutubeVideoDetails(videoId) {
         return null;
     }
 }
+
+// 외부에서 사용할 수 있도록 함수를 export 합니다.
+module.exports = { 
+    findMusicVideo, 
+    getAccessToken,
+    spotifySearch
+};

@@ -430,8 +430,8 @@ songRouter.get('/search', async (req, res) => {
         for (const item of results) {
             try {
                 await pool.query(
-                    `INSERT IGNORE INTO Songs (track_name, artist, spotify_url, album_image_url) VALUES (?, ?, ?, ?)`,
-                    [item.trackName, item.artist, item.spotifyUrl, item.albumImageUrl]
+                    `INSERT IGNORE INTO Songs (track_name, artist, spotify_url, youtube_url, album_image_url) VALUES (?, ?, ?, ?, ?)`,
+                    [item.trackName, item.artist, item.spotifyUrl, item.youtubeUrl, item.albumImageUrl]
                 );
             } catch (err) {
                 // 곡 저장 실패 시 에러 로그만 남기고 계속 진행
@@ -466,17 +466,22 @@ const youtubeRouter = express.Router();
 
 // [GET] /api/youtube/search?q=검색어
 youtubeRouter.get('/ytsearch', async (req, res) => {
-    const query = req.query.q;
-    if (!query) {
-        return res.status(400).json({ message: '검색어(q) 파라미터가 필요합니다.' });
-    }
+    // 곡명과 아티스트명을 각각 받음
+    const title = req.query.title;
+    const artist = req.query.artist;
+    let rows;
     try {
-        const video = await searchModule.findMusicVideo(query); // videoInfo -> { title, link }
+        if (title && artist) {
+            [rows] = await pool.query(
+                "SELECT youtube_url, track_name FROM Songs WHERE track_name = ? AND artist = ? LIMIT 1",
+                [title, artist]
+            );
+        }
 
-        if (!video) {
+        if (!rows.length || !rows[0].youtube_url) {
             return res.status(404).json({ message: '검색 결과가 없습니다.' });
         }
-        return res.json({ success: true, title: video.title, link: video.link });
+        return res.json({ success: true, title: rows[0].track_name, link: rows[0].youtube_url });
     }
     catch (error) {
         console.error('YouTube 검색 중 오류:', error);

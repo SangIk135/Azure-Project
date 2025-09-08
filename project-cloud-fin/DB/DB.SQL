@@ -37,6 +37,7 @@ CREATE TABLE `Songs` (
     `track_name` VARCHAR(255) NOT NULL COMMENT '곡명',
     `artist` VARCHAR(100) NOT NULL COMMENT '아티스트명', 
     `spotify_url` VARCHAR(255) NOT NULL COMMENT 'Spotify URL', 
+    `youtube_url` VARCHAR(255) NULL COMMENT 'YouTube URL',
     `album_image_url` VARCHAR(255) NOT NULL COMMENT 'Album Image URL', 
     PRIMARY KEY (`song_id`),
     UNIQUE KEY `spotify_url` (`spotify_url`)

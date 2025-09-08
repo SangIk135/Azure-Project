@@ -575,7 +575,7 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
     try {
       const videoIds = [];
       for (const song of playlist.songs) {
-        const res = await fetch(`${BASE_URL}/api/youtube/ytsearch?q=${encodeURIComponent(song.title + ' ' + song.artist)}`);
+        const res = await fetch(`${BASE_URL}/api/youtube/ytsearch?title=${encodeURIComponent(song.title)}&artist=${encodeURIComponent(song.artist)}`);
         const data = await res.json();
         console.log('YouTube Search Data:', data);
         if (data.success && data.link) {
@@ -856,7 +856,10 @@ function SearchPage({ context, user }) {
               album: item.albumName,
               releaseDate: item.releaseDate,
               spotifyUrl: item.spotifyUrl,
+              youtubeUrl: item.youtubeUrl,
+              albumImageUrl: item.albumImageUrl, // <-- 이 부분 추가
             })));
+            console.log("search results:", data.items);
           } else {
             setResults([]);
             setError(data.message || '검색 결과가 없습니다.');
@@ -923,7 +926,10 @@ function SearchPage({ context, user }) {
             results.length > 0 ? (
               results.map((song) => (
                 <SongItem key={song.spotifyUrl}>
-                  <img src={`https://placehold.co/80x80/4f46e5/ffffff?text=${encodeURI(song.title[0])}`} alt={song.title} style={{ width: '3.5rem', height: '3.5rem', borderRadius: '0.25rem', marginRight: '1rem' }} />
+                  {/* <img src={`https://placehold.co/80x80/4f46e5/ffffff?text=${encodeURI(song.title[0])}`} alt={song.title} style={{ width: '3.5rem', height: '3.5rem', borderRadius: '0.25rem', marginRight: '1rem' }} /> */}
+                  <img 
+                  src={song.albumImageUrl ? song.albumImageUrl : `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(song.title[0])}`} 
+                  style={{ width: '3.5rem', height: '3.5rem', borderRadius: '0.25rem', marginRight: '1rem' }} />
                   <div style={{ flexGrow: 1 }}>
                     <p style={{ fontWeight: 600, margin: 0 }}>{song.title}</p>
                     <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>{song.artist}</p>
