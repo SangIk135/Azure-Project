@@ -492,6 +492,64 @@ youtubeRouter.get('/ytsearch', async (req, res) => {
 app.use('/api/songs', songRouter);
 app.use('/api/youtube', youtubeRouter);
 
+// -----------------------------------------------------------------
+// 4. 공유 관련 API (Share) - 새로 추가하는 부분
+// -----------------------------------------------------------------
+const shareRouter = express.Router();
+
+// [GET] /api/share/playlist/:id - 공유용 플레이리스트 메타정보 조회
+shareRouter.get('/playlist/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // 플레이리스트 정보와 첫 번째 곡의 앨범 이미지를 함께 조회하는 쿼리
+        const [rows] = await pool.query(`
+            SELECT 
+                p.name, 
+                p.description,
+                p.is_public,
+                u.nickname as creator_nickname,
+                (SELECT s.album_image_url 
+                 FROM Playlist_Songs ps 
+                 JOIN Songs s ON ps.song_id = s.song_id 
+                 WHERE ps.playlist_id = p.playlist_id 
+                 ORDER BY ps.sequence ASC 
+                 LIMIT 1) as imageUrl
+            FROM Playlists p
+            JOIN Users u ON p.user_id = u.user_id
+            WHERE p.playlist_id = ?
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+        }
+
+        const playlist = rows[0];
+
+        // 비공개 플레이리스트는 공유할 수 없도록 처리
+        if (!playlist.is_public) {
+            return res.status(403).json({ message: '비공개 플레이리스트는 공유할 수 없습니다.' });
+        }
+        
+        // 프론트엔드 주소(CORS 설정에 있는 주소)를 기반으로 공유될 전체 URL 생성
+        const frontendBaseUrl = 'https://polite-dune-035d4c800.2.azurestaticapps.net';
+        const shareUrl = `${frontendBaseUrl}/playlist/${id}`;
+
+        // 페이스북 공유에 필요한 메타데이터를 JSON 형식으로 응답
+        res.json({
+            title: `🎵 ${playlist.name}`,
+            description: playlist.description ? `${playlist.description} (by ${playlist.creator_nickname})` : `(by ${playlist.creator_nickname})`,
+            imageUrl: playlist.imageUrl || 'https://i.imgur.com/1vG0iJ8.png', // 첫 곡 이미지가 없을 경우 사용할 기본 이미지
+            url: shareUrl
+        });
+
+    } catch (err) {
+        console.error('공유 정보 조회 실패:', err);
+        res.status(500).json({ message: '공유 정보를 가져오는 중 오류가 발생했습니다.', error: err.message });
+    }
+});
+
+app.use('/api/share', shareRouter);
+
 
 // =================================================================
 // 서버 시작

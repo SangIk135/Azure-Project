@@ -487,8 +487,6 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
     fetch(`${BASE_URL}/api/playlists/${playlistId}`)
       .then(res => res.json())
       .then(data => {
-        // console.log("Data:", data);
-        // 서버 필드명 변환
         if (!data || !data.playlist_id) {
           setPlaylist(null);
           return;
@@ -516,6 +514,32 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
       .catch(() => setPlaylist(null));
   }, [playlistId]);
 
+  // ▼▼▼ [1. 여기에 함수가 새로 추가됩니다] ▼▼▼
+  const handleFacebookShare = async () => {
+    if (!playlistId) return;
+
+    try {
+      // 1. 백엔드에 만들어둔 공유 정보 API를 호출합니다.
+      const response = await fetch(`${BASE_URL}/api/share/playlist/${playlistId}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || '공유 정보를 가져올 수 없습니다.');
+      }
+      const shareData = await response.json();
+
+      // 2. 받아온 URL로 페이스북 공유 링크를 생성합니다.
+      const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}`;
+
+      // 3. 새 창을 띄워 페이스북 공유 화면을 엽니다.
+      window.open(facebookShareUrl, '_blank', 'width=600,height=400');
+
+    } catch (error) {
+      console.error("페이스북 공유 실패:", error);
+      alert(`공유에 실패했습니다: ${error.message}`);
+    }
+  };
+  // ▲▲▲ [여기까지 함수 추가] ▲▲▲
+
   const handleDelete = async () => {
     if (window.confirm(`'${playlist.name}' 플레이리스트를 정말 삭제하시겠습니까?`)) {
       deletePlaylist(playlist.id);
@@ -523,7 +547,6 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
     }
   };
 
-  // 곡 삭제
   const handleSongDelete = async (songId) => {
     if (!window.confirm('이 곡을 삭제하시겠습니까?')) return;
     try {
@@ -541,7 +564,6 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
     }
   };
 
-  // 정보 수정
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -564,14 +586,12 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
     }
   };
 
-    // --- 유튜브 재생 처리 함수 ---  
   const handlePlayYoutube = async () => {
     if (!playlist || playlist.songs.length === 0) {
       alert('재생할 곡이 없습니다.');
       return;
     }
     setYoutubePlayer({ isOpen: true, loading: true, currentIndex: 0, videoIds: [] });
-    // 모든 곡의 제목+아티스트로 유튜브 영상 검색
     try {
       const videoIds = [];
       for (const song of playlist.songs) {
@@ -579,7 +599,6 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
         const data = await res.json();
         console.log('YouTube Search Data:', data);
         if (data.success && data.link) {
-          // 유튜브 videoId 추출
           const match = data.link.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
           if (match && match[1]) {
             videoIds.push(match[1]);
@@ -628,6 +647,7 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
   const isOwner = user?.nickname === playlist.creatorNickname;
 
   if (editMode) {
+    // (editMode일 때의 JSX 코드는 동일하므로 생략)
     return (
       <PageContainer>
         <h1>플레이리스트 정보 수정</h1>
@@ -677,9 +697,10 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
       {isOwner ? (
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
           <Button onClick={handlePlayYoutube}><PlayIcon /> 재생하기</Button>
-
           <Button onClick={() => setPage('search')}><PlusIcon /> 곡 추가하기</Button>
-          <Button onClick={""}><ShareIcon /> 공유하기</Button>
+          {/* ▼▼▼ [2. 여기에 onClick 이벤트가 연결됩니다] ▼▼▼ */}
+          <Button onClick={handleFacebookShare}><ShareIcon /> 공유하기</Button>
+          {/* ▲▲▲ [여기까지 이벤트 연결] ▲▲▲ */}
           <Button onClick={() => setEditMode(true)}><EditIcon/>정보 수정</Button>
           <Button danger onClick={handleDelete}><TrashIcon /> 삭제하기</Button>
         </div>
@@ -689,7 +710,7 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
         </div>
       )}
 
-      {/* 유튜브 플레이어 (youtubePlayer.isOpen이 true일 때만 렌더링) */}
+      {/* (나머지 JSX 코드는 동일하므로 생략) */}
       {youtubePlayer.isOpen && (
         <YoutubePlayerWrapper>
           <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', alignSelf: 'flex-start' }}>
