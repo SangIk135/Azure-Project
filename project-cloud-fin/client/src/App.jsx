@@ -341,6 +341,7 @@ function SignUpPage({ setPage }) {
   );
 }
 
+<<<<<<< HEAD
 function HomePage({ user, setPage, setContext }) {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -391,6 +392,63 @@ function HomePage({ user, setPage, setContext }) {
         </Grid>
       )}
       {/* <SectionTitle>인기 아티스트</SectionTitle>
+=======
+function HomePage({ user }) {
+  // ▼▼▼ [최근 재생 목록을 저장할 상태 변수 추가] ▼▼▼
+  const [recentlyPlayed, setRecentlyPlayed] = useState([]);
+
+  // ▼▼▼ [컴포넌트가 로드될 때 최근 재생 목록을 가져오는 useEffect 추가] ▼▼▼
+  useEffect(() => {
+    // 로그인한 사용자일 경우에만 API를 호출합니다.
+    if (user?.token) {
+      fetch(`${BASE_URL}/api/history/recent?limit=8`, { // 8개까지 가져오기
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+            // 서버에서 받은 데이터를 프론트엔드에서 사용하기 좋은 형태로 가공합니다.
+            const formattedData = data.map(item => ({
+                id: item.song_id,
+                name: item.track_name,
+                artist: item.artist,
+                imageUrl: item.album_image_url
+            }));
+            setRecentlyPlayed(formattedData);
+        }
+      })
+      .catch(err => console.error("최근 재생 목록 로딩 실패:", err));
+    }
+  }, [user]); // user 객체가 바뀔 때 (로그인 시) 다시 데이터를 가져옵니다.
+
+  return (
+    <PageContainer>
+      <h1 style={{ fontSize: '1.875rem', fontWeight: '700', marginBottom: '0.5rem' }}>안녕하세요, {user ? user.nickname : '방문자'}님!</h1>
+      <p style={{ color: '#94a3b8', marginBottom: '2.5rem' }}>좌측 공개 플레이리스트에서 다른 사용자들의 플레이리스트를 둘러보세요.</p>
+      
+      {/* ▼▼▼ ['다시 듣기' 섹션 UI 추가] ▼▼▼ */}
+      {/* 최근 재생한 곡이 1개 이상 있을 때만 이 섹션을 보여줍니다. */}
+      {user && recentlyPlayed.length > 0 && (
+        <>
+          <SectionTitle>다시 듣기</SectionTitle>
+          <HorizontalScrollContainer>
+            {recentlyPlayed.map(item => (
+              // 기존 ArtistCard 스타일을 재활용하여 앨범 커버와 곡 정보를 보여줍니다.
+              <ArtistCard key={item.id} style={{ width: '150px' }}>
+                <img src={item.imageUrl || 'https://i.imgur.com/1vG0iJ8.png'} alt={item.name} style={{ borderRadius: '0.5rem', width: '150px', height: '150px' }} />
+                <p style={{ fontWeight: 600, marginTop: '0.5rem' }}>{item.name}</p>
+                <span style={{ fontSize: '0.875rem', color: '#94a3b8' }}>{item.artist}</span>
+              </ArtistCard>
+            ))}
+          </HorizontalScrollContainer>
+        </>
+      )}
+
+      {/* ▼▼▼ 기존 '인기 아티스트' 섹션은 그대로 둡니다. ▼▼▼ */}
+      <SectionTitle>인기 아티스트</SectionTitle>
+>>>>>>> 259867b8dc66896c94d5c2485de0868f39f88c41
       <HorizontalScrollContainer>
         {mockPopularArtists.map(artist => (
           <ArtistCard key={artist.id}>
@@ -558,7 +616,25 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
       .catch(() => setPlaylist(null));
   }, [playlistId]);
 
-  // ▼▼▼ [1. 여기에 함수가 새로 추가됩니다] ▼▼▼
+   // 이 코드는 유튜브 플레이어에서 재생하는 곡의 순서(index)가 바뀔 때마다 실행됩니다.
+  useEffect(() => {
+    // 사용자가 로그인했고, 플레이어가 열려있고, 재생할 곡이 있을 때만 실행
+    if (user?.token && youtubePlayer.isOpen && playlist?.songs.length > 0) {
+      const currentSong = playlist.songs[youtubePlayer.currentIndex];
+      if (currentSong) {
+        // fetch를 이용해 서버에 "이 노래를 들었다"고 알려줍니다.
+        fetch(`${BASE_URL}/api/history/play`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.token}`
+          },
+          body: JSON.stringify({ songId: currentSong.id })
+        });
+      }
+    }
+  }, [youtubePlayer.currentIndex, user, youtubePlayer.isOpen, playlist]);
+
   const handleFacebookShare = async () => {
     if (!playlistId) return;
 
