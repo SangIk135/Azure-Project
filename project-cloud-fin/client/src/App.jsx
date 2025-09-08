@@ -577,6 +577,7 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
       for (const song of playlist.songs) {
         const res = await fetch(`${BASE_URL}/api/youtube/ytsearch?q=${encodeURIComponent(song.title + ' ' + song.artist)}`);
         const data = await res.json();
+        console.log('YouTube Search Data:', data);
         if (data.success && data.link) {
           // 유튜브 videoId 추출
           const match = data.link.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
@@ -655,7 +656,11 @@ function PlaylistDetailPage({ setPage, context, user, deletePlaylist }) {
   return (
     <PageContainer>
       <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', alignItems: 'flex-end' }}>
-        <img src={playlist.songs[0].albumImageUrl ? playlist.songs[0].albumImageUrl : `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(playlist.name[0])}`} alt={playlist.name} style={{ width: '12rem', height: '12rem', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
+        <img 
+          src={playlist.songs?.[0]?.albumImageUrl ? playlist.songs[0].albumImageUrl : `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(playlist.name[0])}`} 
+          alt={playlist.name} 
+          style={{ width: '12rem', height: '12rem', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} 
+        />
         <div>
           <p style={{ fontSize: '0.875rem', color: '#94a3b8' }}>플레이리스트</p>
           <h1 style={{ fontSize: '3rem', fontWeight: 'bold', margin: '0.5rem 0' }}>{playlist.name}</h1>

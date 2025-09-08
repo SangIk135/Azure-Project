@@ -10,6 +10,7 @@ const RESULT_CACHE_PATH = path.join(__dirname, 'results_cache.json');
 
 // --- 내부 헬퍼 함수들 (비공개) ---
 async function getAccessToken() { /* 이전 코드와 동일 */ }
+async function youtubeSpotifySearch(query, token) { /* 이전 코드와 동일 */ }
 async function spotifySearch(query, token) { /* 이전 코드와 동일 */ }
 async function findYoutubeMusicVideo(query) { /* 이전 코드와 동일 (필터링 로직 포함) */ }
 async function getYoutubeVideoDetails(videoId) { /* 이전 코드와 동일 */ }
@@ -47,7 +48,7 @@ async function findMusicVideo(query) {
         const token = await getAccessToken();
         if (!token) throw new Error("Spotify 토큰을 발급받지 못했습니다.");
         
-        const songInfo = await spotifySearch(query, token);
+        const songInfo = await youtubeSpotifySearch(query, token);
         const youtubeQuery = songInfo ? `${songInfo.artist} ${songInfo.trackName} Audio` : query;
         videoInfo = await findYoutubeMusicVideo(youtubeQuery);
 
@@ -93,8 +94,8 @@ async function getAccessToken() {
     } catch (error) { console.error('❌ Spotify 토큰 발급 에러'); return null; }
 }
 
-/*
-async function spotifySearch(query, token) {
+
+async function youtubeSpotifySearch(query, token) {
     try {
         const response = await axios.get('https://api.spotify.com/v1/search', {
             headers: { 'Authorization': `Bearer ${token}` },
@@ -106,7 +107,7 @@ async function spotifySearch(query, token) {
         }
         return null;
     } catch (error) { console.error('❌ Spotify 검색 에러'); return null; }
-}*/
+}
 
 async function spotifySearch({ query, token, type = 'track', limit = 10 }) {
     // Spotify 검색 API 호출

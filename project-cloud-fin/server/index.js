@@ -51,7 +51,7 @@ const dbConfig = {
         
         // 이 옵션이 HeidiSQL의 "Verify CA and hostname identity"와 동일한 역할을 합니다.
         // 서버 인증서의 유효성을 검증하며, 보안을 위해 반드시 true로 설정해야 합니다.
-       rejectUnauthorized: true 
+      rejectUnauthorized: true 
     }
 };
 
@@ -61,6 +61,7 @@ if (process.env.DB_SSL === 'true') {
         ca: fs.readFileSync(path.join(__dirname, '../DigiCertGlobalRootG2.pem')),
     }
 }
+
 
 
 
