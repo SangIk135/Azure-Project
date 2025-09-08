@@ -135,7 +135,7 @@ async function findYoutubeMusicVideo(query) {
         if (!response.data.items || response.data.items.length === 0) return null;
         
         const videos = response.data.items;
-        const PREFERRED_KEYWORDS = ['official audio', 'official mv', 'official music video', '오디오'];
+        const PREFERRED_KEYWORDS = ['official audio', 'official mv', 'official music video', '오디오', 'Lyrics', 'Music Video', 'audio'];
         const EXCLUDE_KEYWORDS = ['live', 'fancam', '직캠', 'performance', 'concert', 'showcase', '라이브', '쇼케이스'];
 
         for (const video of videos) {
