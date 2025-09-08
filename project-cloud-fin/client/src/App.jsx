@@ -837,15 +837,108 @@ function CreatePlaylistPage({ setPage, user }) {
   );
 }
 
+// SearchPage 함수 바깥이나 별도 파일에 SongItem 컴포넌트를 정의합니다.
+const SongItemLayout = styled.div`
+  display: flex; align-items: center; padding: 0.75rem;
+  border-radius: 0.5rem; &:hover { background-color: #1e293b; }
+`;
+
+function SongItem({ song, user, myPlaylists, BASE_URL }) {
+  const [selectedPlaylist, setSelectedPlaylist] = useState('');
+  const [addStatus, setAddStatus] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddToPlaylist = async (playlistId) => {
+    if (!playlistId) {
+      setAddStatus('플레이리스트를 선택하세요.');
+      return;
+    }
+    setIsAdding(true);
+    setAddStatus('추가 중...');
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/songs/by-spotify-url?spotifyUrl=${encodeURIComponent(song.spotifyUrl)}`);
+      const data = await res.json();
+      if (!data.song_id) {
+        setAddStatus('곡 정보를 찾을 수 없습니다.');
+        setIsAdding(false);
+        return;
+      }
+
+      const addRes = await fetch(`${BASE_URL}/api/playlists/${playlistId}/songs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({ songId: data.song_id })
+      });
+
+      if (addRes.ok) {
+        setAddStatus('플레이리스트에 추가되었습니다!');
+      } else {
+        const addData = await addRes.json();
+        setAddStatus(addData.message || '추가 실패');
+      }
+    } catch {
+      setAddStatus('추가 중 오류 발생');
+    }
+    setIsAdding(false);
+    
+    // 3초 후에 메시지 초기화
+    setTimeout(() => setAddStatus(''), 3000);
+  };
+  
+  return (
+    <SongItemLayout>
+        <img 
+          src={song.albumImageUrl ? song.albumImageUrl : `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(song.title[0])}`} 
+          style={{ width: '3.5rem', height: '3.5rem', borderRadius: '0.25rem', marginRight: '1rem' }} 
+          alt={song.title}
+        />
+        <div style={{ flexGrow: 1 }}>
+            <p style={{ fontWeight: 600, margin: 0 }}>{song.title}</p>
+            <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>{song.artist}</p>
+            <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>{song.album} ({song.releaseDate})</p>
+        </div>
+
+        {user && myPlaylists.length > 0 && (
+          <div style={{ marginRight: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <select value={selectedPlaylist} onChange={e => setSelectedPlaylist(e.target.value)} style={{ padding: '0.3rem', borderRadius: '0.25rem' }}>
+                <option value="">플레이리스트 선택</option>
+                {myPlaylists.map(pl => (
+                    <option key={pl.id} value={pl.id}>{pl.name}</option>
+                ))}
+            </select>
+            <Button
+                type="button"
+                style={{ fontSize: '0.875rem', padding: '0.4rem 0.8rem', marginTop: 0 }}
+                onClick={() => handleAddToPlaylist(selectedPlaylist)}
+                disabled={isAdding}
+            >
+                {isAdding ? '추가 중...' : 'Add to my Playlist'}
+            </Button>
+          </div>
+        )}
+        <a href={song.spotifyUrl} target="_blank" rel="noopener noreferrer">
+            <Button style={{ fontSize: '0.875rem', padding: '0.4rem 0.8rem', marginTop: 0 }}>Redirect to Spotify</Button>
+        </a>
+        {addStatus && (
+          <span style={{ marginLeft: '1rem', color: addStatus.includes('성공') || addStatus.includes('추가') ? '#22c55e' : '#ef4444', fontWeight: 600 }}>
+            {addStatus}
+          </span>
+        )}
+    </SongItemLayout>
+  );
+}
+
+
 function SearchPage({ context, user }) {
   const { searchTerm } = context || {};
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [myPlaylists, setMyPlaylists] = useState([]);
-  const [selectedPlaylist, setSelectedPlaylist] = useState('');
-  const [addStatus, setAddStatus] = useState('');
-  const [addingSongId, setAddingSongId] = useState(null);
 
   useEffect(() => {
     if (user?.token) {
@@ -897,43 +990,6 @@ function SearchPage({ context, user }) {
     }
   }, [searchTerm]);
 
-  const handleAddToPlaylist = async (song, playlistId) => {
-    setAddingSongId(song.spotifyUrl);
-    setAddStatus('');
-    try {
-      // song_id 조회: spotifyUrl로 서버에 요청
-      const res = await fetch(`${BASE_URL}/api/songs/by-spotify-url?spotifyUrl=${encodeURIComponent(song.spotifyUrl)}`);
-      const data = await res.json();
-      if (!data.song_id) {
-        setAddStatus('곡 정보를 찾을 수 없습니다.');
-        setAddingSongId(null);
-        return;
-      }
-      // 곡 추가 API 호출
-      const addRes = await fetch(`${BASE_URL}/api/playlists/${playlistId}/songs`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
-        },
-        body: JSON.stringify({ songId: data.song_id })
-      });
-      if (addRes.ok) {
-        setAddStatus('플레이리스트에 추가되었습니다!');
-      } else {
-        const addData = await addRes.json();
-        setAddStatus(addData.message || '추가 실패');
-      }
-    } catch {
-      setAddStatus('추가 중 오류 발생');
-    }
-    setAddingSongId(null);
-  };
-
-  const SongItem = styled.div`
-        display: flex; align-items: center; padding: 0.75rem;
-        border-radius: 0.5rem; &:hover { background-color: #1e293b; }
-    `;
   return (
     <PageContainer>
       <h1 style={{ fontSize: '1.875rem', fontWeight: '700', marginBottom: '1.5rem' }}>
@@ -943,50 +999,25 @@ function SearchPage({ context, user }) {
         <p style={{ color: '#94a3b8' }}>검색 중...</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {searchTerm ? (
-            results.length > 0 ? (
-              results.map((song) => (
-                <SongItem key={song.spotifyUrl}>
-                  {/* <img src={`https://placehold.co/80x80/4f46e5/ffffff?text=${encodeURI(song.title[0])}`} alt={song.title} style={{ width: '3.5rem', height: '3.5rem', borderRadius: '0.25rem', marginRight: '1rem' }} /> */}
-                  <img 
-                  src={song.albumImageUrl ? song.albumImageUrl : `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(song.title[0])}`} 
-                  style={{ width: '3.5rem', height: '3.5rem', borderRadius: '0.25rem', marginRight: '1rem' }} />
-                  <div style={{ flexGrow: 1 }}>
-                    <p style={{ fontWeight: 600, margin: 0 }}>{song.title}</p>
-                    <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>{song.artist}</p>
-                    <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>{song.album} ({song.releaseDate})</p>
-                  </div>
-                  {/* Add to my Playlist 버튼 및 드롭다운 */}
-                  {user && myPlaylists.length > 0 && (
-                    <div style={{ marginRight: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <select value={selectedPlaylist} onChange={e => setSelectedPlaylist(e.target.value)} style={{ padding: '0.3rem', borderRadius: '0.25rem' }}>
-                        <option value="">플레이리스트 선택</option>
-                        {myPlaylists.map(pl => (
-                          <option key={pl.id} value={pl.id}>{pl.name}</option>
-                        ))}
-                      </select>
-                      <Button type="button" style={{ fontSize: '0.875rem', padding: '0.4rem 0.8rem', marginTop: 0 }}
-                        onClick={() => selectedPlaylist && handleAddToPlaylist(song, selectedPlaylist)} disabled={addingSongId === song.spotifyUrl}>
-                        {addingSongId === song.spotifyUrl ? '추가 중...' : 'Add to my Playlist'}
-                      </Button>
-                    </div>
-                  )}
-                  <a href={song.spotifyUrl} target="_blank" rel="noopener noreferrer">
-                    <Button style={{ fontSize: '0.875rem', padding: '0.4rem 0.8rem', marginTop: 0 }}>Redirect to Spotify</Button>
-                  </a>
-                  {/* 곡 추가 결과 메시지 */}
-                  {addStatus && addingSongId === song.spotifyUrl && (
-                    <span style={{ marginLeft: '1rem', color: '#22c55e', fontWeight: 600 }}>{addStatus}</span>
-                  )}
-                </SongItem>
-              ))
-            ) : (
-              <p style={{ color: '#94a3b8' }}>{error || '검색 결과가 없습니다.'}</p>
-            )
+        {searchTerm ? (
+          results.length > 0 ? (
+            results.map((song) => (
+              // 분리된 SongItem 컴포넌트를 사용하고 필요한 props를 전달합니다.
+              <SongItem
+                key={song.spotifyUrl}
+                song={song}
+                user={user}
+                myPlaylists={myPlaylists}
+                BASE_URL={BASE_URL} // BASE_URL도 props로 전달
+              />
+            ))
           ) : (
-            <p style={{ color: '#94a3b8' }}>검색어를 입력해 주세요.</p>
-          )}
-        </div>
+            <p style={{ color: '#94a3b8' }}>{error || '검색 결과가 없습니다.'}</p>
+          )
+        ) : (
+          <p style={{ color: '#94a3b8' }}>검색어를 입력해 주세요.</p>
+        )}
+      </div>
       )}
     </PageContainer>
   );
