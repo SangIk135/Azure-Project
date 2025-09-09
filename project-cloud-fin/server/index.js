@@ -30,7 +30,7 @@ console.log("--- Express 앱 생성 완료 ---");
 
 // 미들웨어를 설정합니다.
 const corsOptions = {
-  origin: 'https://polite-dune-035d4c800.2.azurestaticapps.net', // 허용할 프론트엔드 주소
+  origin: 'https://kind-field-08df29700.1.azurestaticapps.net', // 허용할 프론트엔드 주소
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -557,7 +557,7 @@ shareRouter.get('/playlist/:id', async (req, res) => {
         }
         
         // 프론트엔드 주소(CORS 설정에 있는 주소)를 기반으로 공유될 전체 URL 생성
-        const frontendBaseUrl = 'https://polite-dune-035d4c800.2.azurestaticapps.net';
+        const frontendBaseUrl = 'https://kind-field-08df29700.1.azurestaticapps.net';
         // const frontendBaseUrl = 'http://localhost:5173';
         const shareUrl = `${frontendBaseUrl}/playlist/${id}`;
 
