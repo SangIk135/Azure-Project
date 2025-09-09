@@ -48,17 +48,17 @@ const dbConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    // ssl: {ca: fs.readFileSync(path.join(__dirname, 'certs/DigiCertGlobalRootG2.crt.pem'), 'utf-8'),
-    //     rejectUnauthorized: true 
-    // }
+    ssl: {ca: fs.readFileSync(path.join(__dirname, 'certs/DigiCertGlobalRootG2.crt.pem'), 'utf-8'),
+        rejectUnauthorized: true 
+    }
 };
 
 
-// if (process.env.DB_SSL === 'true') {
-//     dbConfig.ssl = { 
-//         ca: fs.readFileSync(path.join(__dirname, '../DigiCertGlobalRootG2.pem')),
-//     }
-// }
+if (process.env.DB_SSL === 'true') {
+    dbConfig.ssl = { 
+        ca: fs.readFileSync(path.join(__dirname, '../DigiCertGlobalRootG2.pem')),
+    }
+}
 
 
 
