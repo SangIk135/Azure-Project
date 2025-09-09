@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AuthPageContainer,
@@ -19,10 +19,6 @@ function SignUpPage() {
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  
-  useEffect(() => {
-  document.title = '회원가입 | Music Playlist App';
-  }, []);
 
   const handleSignUp = async (e) => {
     e.preventDefault();

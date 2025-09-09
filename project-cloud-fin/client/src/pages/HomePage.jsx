@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { PageContainer, Grid, PlaylistItem, SectionTitle } from '../styles/StyledComponents';
 import { BASE_URL } from '../utils/config';
+import { MusicIcon } from '../components/Navigation';
 
 function HomePage({ user }) {
-  useEffect(() => {
-    document.title = '홈 | Music Playlist App';
-  }, []);
   const navigate = useNavigate();
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -33,6 +32,10 @@ function HomePage({ user }) {
 
   return (
     <PageContainer>
+      <Helmet>
+        <title>홈 | Music Playlist App</title>
+        <link rel="icon" type="image/png" href="/favicon.png" />
+      </Helmet>
       <h1 style={{ fontSize: '1.875rem', fontWeight: '700', marginBottom: '0.5rem' }}>
         안녕하세요, {user ? user.nickname : '방문자'}님!
       </h1>

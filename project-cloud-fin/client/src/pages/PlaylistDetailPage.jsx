@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom'; // useLocation
 import YouTube from 'react-youtube';
 import styled from 'styled-components';
@@ -22,14 +22,6 @@ export default function PlaylistDetailPage({ user }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const [playlist, setPlaylist] = useState(null);
-
-  useEffect(() => {
-    if (playlist) {
-      document.title = `${playlist.name} | Music Playlist App`;
-    } else {
-      document.title = 'PlayList | Music Playlist App';
-    }
-  }, [playlist]);
   const [editMode, setEditMode] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
