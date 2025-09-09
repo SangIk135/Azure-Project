@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AuthPageContainer,
@@ -19,6 +19,10 @@ function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    document.title = '로그인 | Music Playlist App';
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

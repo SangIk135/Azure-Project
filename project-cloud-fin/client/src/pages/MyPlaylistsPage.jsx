@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer, Grid, PlaylistItem, Button } from '../styles/StyledComponents';
 import { PlaylistIcon, PlusIcon } from '../components/icons/Icons';
@@ -7,6 +7,10 @@ import { BASE_URL } from '../utils/config';
 function MyPlaylistsPage({ user }) {
   const navigate = useNavigate();
   const [myPlaylists, setMyPlaylists] = useState([]);
+  
+  useEffect(() => {
+  document.title = '내 플레이리스트 | Music Playlist App';
+  }, []);
 
   useEffect(() => {
     if (!user?.token) return;

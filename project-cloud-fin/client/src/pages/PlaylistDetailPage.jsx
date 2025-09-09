@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom'; // useLocation
 import YouTube from 'react-youtube';
 import styled from 'styled-components';
@@ -22,6 +22,14 @@ export default function PlaylistDetailPage({ user }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const [playlist, setPlaylist] = useState(null);
+
+  useEffect(() => {
+    if (playlist) {
+      document.title = `${playlist.name} | Music Playlist App`;
+    } else {
+      document.title = 'PlayList | Music Playlist App';
+    }
+  }, [playlist]);
   const [editMode, setEditMode] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
@@ -221,6 +229,10 @@ export default function PlaylistDetailPage({ user }) {
   if (editMode) {
     return (
       <PageContainer>
+        <Helmet>
+          <title>플레이리스트 수정 | Music Playlist App</title>
+          <link rel="icon" type="image/png" href="/favicon.png" />
+        </Helmet>
         <h1>플레이리스트 정보 수정</h1>
         <form onSubmit={handleEditSubmit} style={{ maxWidth: 400 }}>
           <div style={{ marginBottom: '1rem' }}>

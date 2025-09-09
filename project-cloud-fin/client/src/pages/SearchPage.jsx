@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Grid, PageContainer } from '../styles/StyledComponents';
 import SongItem from '../components/SongItem';
@@ -12,7 +12,11 @@ function SearchPage({ user }) {
   const [error, setError] = useState('');
   const [myPlaylists, setMyPlaylists] = useState([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    document.title = searchQuery ? `${searchQuery} 검색 결과 | Music Playlist App` : '검색 | Music Playlist App';
+  }, [searchQuery]);
+
+  useEffect(() => {
     if (user?.token) {
       fetch(`${BASE_URL}/api/playlists/mine`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
@@ -27,7 +31,7 @@ function SearchPage({ user }) {
     }
   }, [user]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (searchQuery) {
       setLoading(true);
       setError('');

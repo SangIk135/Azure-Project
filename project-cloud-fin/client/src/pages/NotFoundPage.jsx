@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { 
@@ -11,6 +11,10 @@ import {
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
+  
+  useEffect(() => {
+  document.title = '404 | Music Playlist App';
+  }, []);
 
   return (
     <NotFoundContainer>

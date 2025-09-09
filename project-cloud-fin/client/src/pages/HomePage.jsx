@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer, Grid, PlaylistItem, SectionTitle } from '../styles/StyledComponents';
 import { BASE_URL } from '../utils/config';
 
 function HomePage({ user }) {
+  useEffect(() => {
+    document.title = '홈 | Music Playlist App';
+  }, []);
   const navigate = useNavigate();
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(false);
