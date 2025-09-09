@@ -217,7 +217,7 @@ playlistRouter.get('/public', async (req, res) => {
             ) s ON s.playlist_id = p.playlist_id
             WHERE p.is_public = TRUE
             ORDER BY p.playlist_id DESC
-            LIMIT 10
+            LIMIT 1000
         `);
         res.json(rows);
     } catch (err) {
