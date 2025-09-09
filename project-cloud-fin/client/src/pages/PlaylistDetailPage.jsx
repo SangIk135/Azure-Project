@@ -221,6 +221,10 @@ export default function PlaylistDetailPage({ user }) {
   if (editMode) {
     return (
       <PageContainer>
+        <Helmet>
+          <title>플레이리스트 수정 | Music Playlist App</title>
+          <link rel="icon" type="image/png" href="/favicon.png" />
+        </Helmet>
         <h1>플레이리스트 정보 수정</h1>
         <form onSubmit={handleEditSubmit} style={{ maxWidth: 400 }}>
           <div style={{ marginBottom: '1rem' }}>
@@ -252,6 +256,10 @@ export default function PlaylistDetailPage({ user }) {
 
   return (
     <PageContainer>
+      <Helmet>
+        <title>{playlist.name ? `${playlist.name} 플레이리스트 상세 | Music Playlist App` : `플레이리스트 상세 | Music Playlist App`}</title>
+        <link rel="icon" type="image/png" href="/favicon.png" />
+      </Helmet>
       <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', alignItems: 'flex-end' }}>
         <img
           src={playlist.songs?.[0]?.albumImageUrl ? playlist.songs[0].albumImageUrl : `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(playlist.name[0])}`}

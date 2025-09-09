@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Grid, PageContainer } from '../styles/StyledComponents';
 import SongItem from '../components/SongItem';
 import { BASE_URL } from '../utils/config';
@@ -64,6 +65,10 @@ function SearchPage({ user }) {
 
   return (
     <PageContainer>
+      <Helmet>
+        <title>{searchQuery ? `${searchQuery} 검색 결과` : '검색'} | Music Playlist App</title>
+        <link rel="icon" type="image/png" href="/favicon.png" />
+      </Helmet>
       <h1 style={{ fontSize: '1.875rem', fontWeight: '700', marginBottom: '1.5rem' }}>
         {searchQuery || ''} 검색 결과
       </h1>

@@ -7,6 +7,7 @@ import {
     NotFoundSubtitle,
     NotFoundDescription
 } from '../styles/StyledComponents';
+import { Helmet } from 'react-helmet-async';
 
 
 export default function NotFoundPage() {
@@ -14,6 +15,10 @@ export default function NotFoundPage() {
 
   return (
     <NotFoundContainer>
+      <Helmet>
+        <title>404 | Music Playlist App</title>
+        <link rel="icon" type="image/png" href="/favicon.png" />
+      </Helmet>
       <NotFoundTitle>404</NotFoundTitle>
       <NotFoundSubtitle>페이지를 찾을 수 없습니다</NotFoundSubtitle>
       <NotFoundDescription>

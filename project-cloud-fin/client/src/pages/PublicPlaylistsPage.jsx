@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { PageContainer, Grid, PlaylistItem } from '../styles/StyledComponents';
 import { PlaylistIcon } from '../components/icons/Icons';
 import { BASE_URL } from '../utils/config';
@@ -35,6 +36,10 @@ function PublicPlaylistsPage() {
 
   return (
     <PageContainer>
+      <Helmet>
+        <title>공개 플레이리스트 | Music Playlist App</title>
+        <link rel="icon" type="image/png" href="/favicon.png" />
+      </Helmet>
       <h1 style={{ fontSize: '1.875rem', fontWeight: '700', marginBottom: '2rem' }}>공개 플레이리스트</h1>
       {publicPlaylists.length > 0 ? (
         <Grid>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
   AuthPageContainer,
   FormContainer,
@@ -42,6 +43,10 @@ function SignUpPage() {
 
   return (
     <AuthPageContainer>
+      <Helmet>
+        <title>회원가입 | Music Playlist App</title>
+        <link rel="icon" type="image/png" href="/favicon.png" />
+      </Helmet>
       <FormContainer>
         <FormTitle>회원가입</FormTitle>
         <p>몇 가지 정보만 입력하면 완료!</p>
