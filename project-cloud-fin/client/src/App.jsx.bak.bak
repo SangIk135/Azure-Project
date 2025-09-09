@@ -1,0 +1,232 @@
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { GlobalStyle } from './styles/GlobalStyles';
+import { AppContainer, MainContent, PageWrapper } from './styles/StyledComponents';
+import { NavContainer, NavList, NavItem, Logo, MusicIcon } from './components/Navigation';
+import { HomeIcon, GlobeIcon, PlaylistIcon, LogoutIcon } from './components/icons/Icons';
+import { BASE_URL } from './utils/config';
+
+// 페이지 컴포넌트 임포트
+import Home from './pages/Home';
+import PublicPlaylists from './pages/PublicPlaylists';
+import MyPlaylists from './pages/MyPlaylists';
+import CreatePlaylist from './pages/CreatePlaylist';
+import PlaylistDetail from './pages/PlaylistDetail';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import NotFound from './pages/NotFound';
+import Header from './components/Header';
+
+// 인증이 필요한 라우트를 위한 컴포넌트
+const ProtectedRoute = ({ user, children }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!user && location.pathname !== '/login') {
+      navigate('/login');
+    }
+  }, [user, location, navigate]);
+
+  return user ? children : null;
+};
+
+// 메인 레이아웃 컴포넌트
+function Layout({ user, handleLogout, children }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const isAuthPage = ['/login', '/signup'].includes(location.pathname);
+
+  if (isAuthPage) {
+    return children;
+  }
+
+  return (
+    <AppContainer>
+      <NavContainer>
+        <Logo>
+          <MusicIcon style={{ color: '#818cf8', height: '2rem', width: '2rem' }} />
+          <h1>MyMusic</h1>
+        </Logo>
+        <NavList>
+          <NavItem active={location.pathname === '/'} onClick={() => navigate('/')}>
+            <HomeIcon /><span>홈</span>
+          </NavItem>
+          <NavItem active={location.pathname === '/public-playlists'} onClick={() => navigate('/public-playlists')}>
+            <GlobeIcon /><span>공개 플레이리스트</span>
+          </NavItem>
+          <NavItem 
+            active={['/my-playlists', '/create-playlist'].includes(location.pathname)}
+            onClick={() => navigate('/my-playlists')}
+          >
+            <PlaylistIcon /><span>내 플레이리스트</span>
+          </NavItem>
+        </NavList>
+        <div style={{ marginTop: 'auto' }}>
+          {user ? (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: '0.5rem',
+              background: '#1e293b',
+              borderRadius: '0.5rem'
+            }}>
+              <img
+                src={`https://placehold.co/100x100/4f46e5/ffffff?text=${user.nickname[0]}`}
+                alt="profile"
+                style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%' }}
+              />
+              <div style={{ flexGrow: 1 }}>
+                <p style={{ fontWeight: 600, margin: 0, fontSize: '0.875rem' }}>{user.nickname}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '0.5rem'
+                }}
+                title="로그아웃"
+              >
+                <LogoutIcon />
+              </button>
+            </div>
+          ) : (
+            <>
+              <button onClick={() => navigate('/login')}>로그인</button>
+              <button onClick={() => navigate('/signup')}>회원가입</button>
+            </>
+          )}
+        </div>
+      </NavContainer>
+      <MainContent>
+        <Header setSearchTerm={setSearchTerm} />
+        <PageWrapper>
+          {React.cloneElement(children, { searchTerm })}
+        </PageWrapper>
+      </MainContent>
+    </AppContainer>
+  );
+}
+
+// 메인 App 컴포넌트
+export default function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // 저장된 사용자 정보 복원
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error('Failed to parse user data:', e);
+        localStorage.removeItem('user');
+      }
+    }
+  }, []);
+
+  const handleLogin = async (email, password) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const userData = {
+          ...data.user,
+          token: data.token,
+        };
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        return true;
+      } else {
+        throw new Error(data.message || '로그인에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
+
+  const handleSignup = async (userData) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return true;
+      } else {
+        throw new Error(data.message || '회원가입에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  return (
+    <BrowserRouter>
+      <GlobalStyle />
+      <Routes>
+        {/* 로그인 & 회원가입 라우트 */}
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/signup" element={<Signup onSignup={handleSignup} />} />
+
+        {/* 레이아웃을 포함한 메인 라우트 */}
+        <Route path="/" element={
+          <Layout user={user} handleLogout={handleLogout}>
+            <Routes>
+              {/* 공개 페이지 */}
+              <Route index element={<Home user={user} />} />
+              <Route path="public-playlists" element={<PublicPlaylists user={user} />} />
+
+              {/* 보호된 페이지 */}
+              <Route path="my-playlists" element={
+                <ProtectedRoute user={user}>
+                  <MyPlaylists user={user} />
+                </ProtectedRoute>
+              } />
+              <Route path="create-playlist" element={
+                <ProtectedRoute user={user}>
+                  <CreatePlaylist user={user} />
+                </ProtectedRoute>
+              } />
+              <Route path="playlist/:id" element={
+                <ProtectedRoute user={user}>
+                  <PlaylistDetail user={user} />
+                </ProtectedRoute>
+              } />
+
+              {/* 404 페이지 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Layout>
+        } />
+      </Routes>
+    </BrowserRouter>
+  );
+}
