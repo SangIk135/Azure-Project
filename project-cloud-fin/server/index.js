@@ -206,9 +206,11 @@ playlistRouter.get('/public', async (req, res) => {
                 p.name, 
                 p.description, 
                 u.nickname as creator_nickname,
-                s.album_image_url
+                s.album_image_url,
+                COUNT(ps.song_id) as song_count
             FROM Playlists p
             JOIN Users u ON p.user_id = u.user_id
+            LEFT JOIN Playlist_Songs ps ON p.playlist_id = ps.playlist_id
             LEFT JOIN (
                 SELECT ps.playlist_id, s.album_image_url
                 FROM Playlist_Songs ps
@@ -216,6 +218,8 @@ playlistRouter.get('/public', async (req, res) => {
                 WHERE ps.sequence = 1
             ) s ON s.playlist_id = p.playlist_id
             WHERE p.is_public = TRUE
+            GROUP BY p.playlist_id, p.name, p.description, u.nickname, s.album_image_url
+            HAVING song_count > 0
             ORDER BY p.playlist_id DESC
             LIMIT 1000
         `);
