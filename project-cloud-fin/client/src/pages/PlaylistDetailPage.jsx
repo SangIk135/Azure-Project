@@ -229,10 +229,6 @@ export default function PlaylistDetailPage({ user }) {
   if (editMode) {
     return (
       <PageContainer>
-        <Helmet>
-          <title>플레이리스트 수정 | Music Playlist App</title>
-          <link rel="icon" type="image/png" href="/favicon.png" />
-        </Helmet>
         <h1>플레이리스트 정보 수정</h1>
         <form onSubmit={handleEditSubmit} style={{ maxWidth: 400 }}>
           <div style={{ marginBottom: '1rem' }}>
