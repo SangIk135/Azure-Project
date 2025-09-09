@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom'; // useLocation
 import YouTube from 'react-youtube';
 import styled from 'styled-components';
@@ -22,6 +22,14 @@ export default function PlaylistDetailPage({ user }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const [playlist, setPlaylist] = useState(null);
+
+  useEffect(() => {
+    if (playlist) {
+      document.title = `${playlist.name} | Music Playlist App`;
+    } else {
+      document.title = 'PlayList | Music Playlist App';
+    }
+  }, [playlist]);
   const [editMode, setEditMode] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
@@ -256,10 +264,6 @@ export default function PlaylistDetailPage({ user }) {
 
   return (
     <PageContainer>
-      <Helmet>
-        <title>{playlist.name ? `${playlist.name} 플레이리스트 상세 | Music Playlist App` : `플레이리스트 상세 | Music Playlist App`}</title>
-        <link rel="icon" type="image/png" href="/favicon.png" />
-      </Helmet>
       <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', alignItems: 'flex-end' }}>
         <img
           src={playlist.songs?.[0]?.albumImageUrl ? playlist.songs[0].albumImageUrl : `https://placehold.co/300x300/10b981/ffffff?text=${encodeURI(playlist.name[0])}`}

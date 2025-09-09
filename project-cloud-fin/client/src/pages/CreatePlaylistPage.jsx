@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { PageContainer, Form, FormGroup, Input, Button, ErrorMessage } from '../styles/StyledComponents';
 import { BASE_URL } from '../utils/config';
 
@@ -8,6 +7,10 @@ function CreatePlaylistPage({ user }) {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [isChecked, setIsChecked] = useState(true);
+
+  useEffect(() => {
+  document.title = '새 플레이리스트 만들기 | Music Playlist App';
+  }, []);
 
   const handleOnChange = () => {
     setIsChecked(!isChecked);
@@ -50,10 +53,8 @@ function CreatePlaylistPage({ user }) {
 
   return (
     <PageContainer>
-      <Helmet>
-        <title>새 플레이리스트 만들기 | Music Playlist App</title>
-        <link rel="icon" type="image/png" href="/favicon.png" />
-      </Helmet>
+      <link rel="icon" type="image/png" href="/favicon.png" />
+      <title>새 플레이리스트 만들기 | Music Playlist App</title>
       <h1 style={{ fontSize: '1.875rem', fontWeight: '700', marginBottom: '2rem' }}>새 플레이리스트 만들기</h1>
       <Form onSubmit={handleCreate} style={{ maxWidth: '600px', gap: '1.5rem' }}>
         <FormGroup style={{ gap: '0.5rem' }}>

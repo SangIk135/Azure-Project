@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import {
   AuthPageContainer,
   FormContainer,
@@ -21,6 +20,10 @@ function LoginPage({ onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    document.title = '로그인 | Music Playlist App';
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -35,10 +38,6 @@ function LoginPage({ onLogin }) {
 
   return (
     <AuthPageContainer>
-      <Helmet>
-        <title>로그인 | Music Playlist App</title>
-        <link rel="icon" type="image/png" href="/favicon.png" />
-      </Helmet>
       <FormContainer>
         <FormTitle>나의 Playlist에 로그인하기</FormTitle>
         <AuthDivider />

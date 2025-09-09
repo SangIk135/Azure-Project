@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { 
@@ -7,18 +7,17 @@ import {
     NotFoundSubtitle,
     NotFoundDescription
 } from '../styles/StyledComponents';
-import { Helmet } from 'react-helmet-async';
 
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
+  
+  useEffect(() => {
+  document.title = '404 | Music Playlist App';
+  }, []);
 
   return (
     <NotFoundContainer>
-      <Helmet>
-        <title>404 | Music Playlist App</title>
-        <link rel="icon" type="image/png" href="/favicon.png" />
-      </Helmet>
       <NotFoundTitle>404</NotFoundTitle>
       <NotFoundSubtitle>페이지를 찾을 수 없습니다</NotFoundSubtitle>
       <NotFoundDescription>
