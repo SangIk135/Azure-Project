@@ -12,6 +12,7 @@ function PublicPlaylistsPage() {
     fetch(`${BASE_URL}/api/playlists/public`)
       .then(res => res.json())
       .then(data => {
+        console.log("Public PlayListData: ", data);
         setPublicPlaylists(Array.isArray(data)
           ? data.map(p => ({
             id: p.playlist_id,
@@ -27,7 +28,7 @@ function PublicPlaylistsPage() {
 
   const handlePlaylistClick = (playlist) => {
     navigate(`/playlist/${playlist.id}`, {
-      state: { creatorNickname: playlist.creatorNickname }
+      state: { playlistId: playlist.id, creatorNickname: playlist.creatorNickname }
     });
   };
 

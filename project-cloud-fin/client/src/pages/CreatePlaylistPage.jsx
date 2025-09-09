@@ -41,8 +41,9 @@ function CreatePlaylistPage({ user }) {
       } else {
         throw new Error(data.message || '플레이리스트 생성 실패');
       }
-    } catch {
+    } catch (error) {
       setError('플레이리스트 생성 중 오류가 발생했습니다.');
+      console.error('Error creating playlist:', error);
     }
   };
 
