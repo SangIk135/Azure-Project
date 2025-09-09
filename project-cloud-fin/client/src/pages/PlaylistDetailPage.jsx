@@ -76,6 +76,7 @@ export default function PlaylistDetailPage({ user }) {
         throw new Error(errorData.message || '공유 정보를 가져올 수 없습니다.');
       }
       const shareData = await response.json();
+      console.log("공유 데이터:", shareData);
       const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}`;
       window.open(facebookShareUrl, '_blank', 'width=600,height=400');
     } catch (error) {

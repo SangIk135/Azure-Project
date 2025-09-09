@@ -48,20 +48,11 @@ const dbConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: {ca: fs.readFileSync(path.join(__dirname, 'certs/DigiCertGlobalRootG2.crt.pem'), 'utf-8'),
+    ssl: {
+        ca: fs.readFileSync(path.join(__dirname, 'certs/DigiCertGlobalRootG2.crt.pem'), 'utf-8'),
         rejectUnauthorized: true 
     }
 };
-
-
-if (process.env.DB_SSL === 'true') {
-    dbConfig.ssl = { 
-        ca: fs.readFileSync(path.join(__dirname, '../DigiCertGlobalRootG2.pem')),
-    }
-}
-
-
-
 
 // console.log('DB 연결 설정:', dbConfig);
 console.log("--- DB 설정값 ---", {
@@ -126,13 +117,13 @@ authRouter.post('/signup', async (req, res) => {
             "INSERT INTO Users (email, password, nickname) VALUES (?, ?, ?)",
             [email, hashedPassword, nickname]
         );
-        res.status(201).json({ message: '회원가입 성공' });
+        res.status(201).json({ success: true, message: '회원가입 성공' });
     } catch (err) {
         console.error('회원가입 실패:', err); // 에러 로그 출력 추가
         if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: '이메일 또는 닉네임이 이미 존재합니다.' });
+            return res.status(409).json({ success: false, message: '이메일 또는 닉네임이 이미 존재합니다.' });
         }
-        res.status(500).json({ message: '회원가입 실패', error: err.message });
+        res.status(500).json({ success: false, message: '회원가입 실패', error: err.message });
     }
 });
 
@@ -143,13 +134,13 @@ authRouter.post('/login', async (req, res) => {
         const [rows] = await pool.query("SELECT * FROM Users WHERE email = ?", [email]);
         const user = rows[0];
         if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ message: '이메일 또는 비밀번호가 잘못되었습니다.' });
+            return res.status(401).json({ success: false, message: '이메일 또는 비밀번호가 잘못되었습니다.' });
         }
         const token = jwt.sign({ userId: user.user_id, nickname: user.nickname }, JWT_SECRET, { expiresIn: '1h' });
-        res.json({ message: '로그인 성공', user: { userId: user.user_id, email: user.email, nickname: user.nickname }, token });
+        res.json({ success: true, message: '로그인 성공', user: { userId: user.user_id, email: user.email, nickname: user.nickname }, token });
     } catch (err) {
         console.error('로그인 실패:', err); // 에러 로그 출력 추가
-        res.status(500).json({ message: '로그인 실패', error: err.message });
+        res.status(500).json({ success: false, message: '로그인 실패', error: err.message });
     }
 });
 
@@ -161,12 +152,12 @@ authRouter.get('/me', authenticateToken, async (req, res) => {
         const { userId } = req.user;
         const [rows] = await pool.query('SELECT user_id, email, nickname FROM Users WHERE user_id = ?', [userId]);
         if (rows.length === 0) {
-            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+            return res.status(404).json({ success: false, message: '사용자를 찾을 수 없습니다.' });
         }
         const user = rows[0];
-        res.json({ user });
+        res.json({ success: true, user });
     } catch (err) {
-        res.status(500).json({ message: '사용자 정보 조회 실패', error: err.message });
+        res.status(500).json({ success: false, message: '사용자 정보 조회 실패', error: err.message });
     }
 });
 
@@ -202,7 +193,7 @@ playlistRouter.get('/new-releases', async (req, res) => {
         }));
         res.json({ success: true, albums });
     } catch (error) {
-        res.status(500).json({ message: '서버 오류', error: error.message });
+        res.status(500).json({ success: false, message: '서버 오류', error: error.message });
     }
 });
 
@@ -230,7 +221,7 @@ playlistRouter.get('/public', async (req, res) => {
         `);
         res.json(rows);
     } catch (err) {
-        res.status(500).json({ message: '공개 플레이리스트 조회 실패', error: err.message });
+        res.status(500).json({ success: false, message: '공개 플레이리스트 조회 실패', error: err.message });
     }
 });
 
@@ -268,7 +259,7 @@ playlistRouter.get('/mine', authenticateToken, async (req, res) => {
         `, [userId]);
         res.json(rows);
     } catch (err) {
-        res.status(500).json({ message: '내 플레이리스트 조회 실패', error: err.message });
+        res.status(500).json({ success: false, message: '내 플레이리스트 조회 실패', error: err.message });
     }
 });
 
@@ -283,7 +274,7 @@ playlistRouter.get('/:id', async (req, res) => {
             WHERE p.playlist_id = ?
         `, [id]);
         if (playlistRows.length === 0) {
-            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+            return res.status(404).json({ success: false, message: '플레이리스트를 찾을 수 없습니다.' });
         }
         const playlist = playlistRows[0];
         const [songs] = await pool.query(`
@@ -295,7 +286,7 @@ playlistRouter.get('/:id', async (req, res) => {
         `, [id]);
         res.json({ ...playlist, songs });
     } catch (err) {
-        res.status(500).json({ message: '플레이리스트 상세 조회 실패', error: err.message });
+        res.status(500).json({ success: false, message: '플레이리스트 상세 조회 실패', error: err.message });
     }
 });
 
@@ -308,9 +299,9 @@ playlistRouter.post('/', authenticateToken, async (req, res) => {
             "INSERT INTO Playlists (user_id, name, description, is_public) VALUES (?, ?, ?, ?)",
             [userId, name, description, is_public]
         );
-        res.status(201).json({ message: '플레이리스트 생성 성공' });
+        res.status(201).json({ success: true, message: '플레이리스트 생성 성공' });
     } catch (err) {
-        res.status(500).json({ message: '플레이리스트 생성 실패', error: err.message });
+        res.status(500).json({ success: false, message: '플레이리스트 생성 실패', error: err.message });
     }
 });
 
@@ -329,11 +320,11 @@ playlistRouter.post('/:id/songs', authenticateToken, async (req, res) => {
         const [rows] = await connection.query("SELECT user_id FROM Playlists WHERE playlist_id = ?", [playlistId]);
         if (rows.length === 0) {
             await connection.rollback();
-            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+            return res.status(404).json({ success: false, message: '플레이리스트를 찾을 수 없습니다.' });
         }
         if (rows[0].user_id !== userId) {
             await connection.rollback();
-            return res.status(403).json({ message: '플레이리스트 소유자가 아닙니다.' });
+            return res.status(403).json({ success: false, message: '플레이리스트 소유자가 아닙니다.' });
         }
 
         // 곡 순서 지정
@@ -353,15 +344,15 @@ playlistRouter.post('/:id/songs', authenticateToken, async (req, res) => {
         );
 
         await connection.commit(); // 모든 쿼리 성공 시 커밋
-        res.status(200).json({ message: '곡 추가 성공' });
+        res.status(200).json({ success: true, message: '곡 추가 성공' });
 
     } catch (err) {
         await connection.rollback(); // 에러 발생 시 롤백
 
         if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: '이미 추가된 곡입니다.' });
+            return res.status(409).json({ success: false, message: '이미 추가된 곡입니다.' });
         }
-        res.status(500).json({ message: '곡 추가 실패', error: err.message });
+        res.status(500).json({ success: false, message: '곡 추가 실패', error: err.message });
     } finally {
         connection.release(); // 사용한 커넥션을 풀에 반환
     }
@@ -376,18 +367,18 @@ playlistRouter.put('/:id', authenticateToken, async (req, res) => {
         // 소유자 확인
         const [rows] = await pool.query('SELECT user_id FROM Playlists WHERE playlist_id = ?', [playlistId]);
         if (rows.length === 0) {
-            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+            return res.status(404).json({ success: false, message: '플레이리스트를 찾을 수 없습니다.' });
         }
         if (rows[0].user_id !== userId) {
-            return res.status(403).json({ message: '플레이리스트 소유자가 아닙니다.' });
+            return res.status(403).json({ success: false, message: '플레이리스트 소유자가 아닙니다.' });
         }
         await pool.query(
             'UPDATE Playlists SET name = ?, description = ?, is_public = ? WHERE playlist_id = ?',
             [name, description, is_public, playlistId]
         );
-        res.status(200).json({ message: '플레이리스트 정보 수정 성공' });
+        res.status(200).json({ success: true, message: '플레이리스트 정보 수정 성공' });
     } catch (err) {
-        res.status(500).json({ message: '플레이리스트 정보 수정 실패', error: err.message });
+        res.status(500).json({ success: false, message: '플레이리스트 정보 수정 실패', error: err.message });
     }
 });
 
@@ -399,16 +390,16 @@ playlistRouter.delete('/:id', authenticateToken, async (req, res) => {
         // 소유자 확인
         const [rows] = await pool.query('SELECT user_id FROM Playlists WHERE playlist_id = ?', [playlistId]);
         if (rows.length === 0) {
-            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+            return res.status(404).json({ success: false, message: '플레이리스트를 찾을 수 없습니다.' });
         }
         if (rows[0].user_id !== userId) {
-            return res.status(403).json({ message: '플레이리스트 소유자가 아닙니다.' });
+            return res.status(403).json({ success: false, message: '플레이리스트 소유자가 아닙니다.' });
         }
         // 삭제
         await pool.query('DELETE FROM Playlists WHERE playlist_id = ?', [playlistId]);
-        res.status(200).json({ message: '플레이리스트 삭제 성공' });
+        res.status(200).json({ success: true, message: '플레이리스트 삭제 성공' });
     } catch (err) {
-        res.status(500).json({ message: '플레이리스트 삭제 실패', error: err.message });
+        res.status(500).json({ success: false, message: '플레이리스트 삭제 실패', error: err.message });
     }
 });
 
@@ -420,15 +411,15 @@ playlistRouter.delete('/:playlistId/songs/:songId', authenticateToken, async (re
         // 소유자 확인
         const [rows] = await pool.query('SELECT user_id FROM Playlists WHERE playlist_id = ?', [playlistId]);
         if (rows.length === 0) {
-            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+            return res.status(404).json({ success: false, message: '플레이리스트를 찾을 수 없습니다.' });
         }
         if (rows[0].user_id !== userId) {
-            return res.status(403).json({ message: '플레이리스트 소유자가 아닙니다.' });
+            return res.status(403).json({ success: false, message: '플레이리스트 소유자가 아닙니다.' });
         }
         await pool.query('DELETE FROM Playlist_Songs WHERE playlist_id = ? AND song_id = ?', [playlistId, songId]);
-        res.status(200).json({ message: '곡 삭제 성공' });
+        res.status(200).json({ success: true, message: '곡 삭제 성공' });
     } catch (err) {
-        res.status(500).json({ message: '곡 삭제 실패', error: err.message });
+        res.status(500).json({ success: false, message: '곡 삭제 실패', error: err.message });
     }
 });
 
@@ -480,7 +471,7 @@ songRouter.get('/search', async (req, res) => {
 songRouter.get('/by-spotify-url', async (req, res) => {
     const spotifyUrl = req.query.spotifyUrl;
     if (!spotifyUrl) {
-        return res.status(400).json({ message: 'spotifyUrl 파라미터가 필요합니다.' });
+        return res.status(400).json({ success: false, message: 'spotifyUrl 파라미터가 필요합니다.' });
     }
     try {
         const [rows] = await pool.query('SELECT song_id FROM Songs WHERE spotify_url = ?', [spotifyUrl]);
@@ -489,7 +480,7 @@ songRouter.get('/by-spotify-url', async (req, res) => {
         }
         return res.json({ song_id: rows[0].song_id });
     } catch (err) {
-        return res.status(500).json({ message: '곡 정보 조회 실패', error: err.message });
+        return res.status(500).json({ success: false, message: '곡 정보 조회 실패', error: err.message });
     }
 });
 
@@ -510,13 +501,13 @@ youtubeRouter.get('/ytsearch', async (req, res) => {
         }
 
         if (!rows.length || !rows[0].youtube_url) {
-            return res.status(404).json({ message: '검색 결과가 없습니다.' });
+            return res.status(404).json({ success: false, message: '검색 결과가 없습니다.' });
         }
         return res.json({ success: true, title: rows[0].track_name, link: rows[0].youtube_url });
     }
     catch (error) {
         console.error('YouTube 검색 중 오류:', error);
-        return res.status(500).json({ message: 'YouTube 검색 중 오류', error: error.message });
+        return res.status(500).json({ success: false, message: 'YouTube 검색 중 오류', error: error.message });
     }
 })
 
@@ -551,19 +542,19 @@ shareRouter.get('/playlist/:id', async (req, res) => {
         `, [id]);
 
         if (rows.length === 0) {
-            return res.status(404).json({ message: '플레이리스트를 찾을 수 없습니다.' });
+            return res.status(404).json({ success: false, message: '플레이리스트를 찾을 수 없습니다.' });
         }
 
         const playlist = rows[0];
 
         // 비공개 플레이리스트는 공유할 수 없도록 처리
         if (!playlist.is_public) {
-            return res.status(403).json({ message: '비공개 플레이리스트는 공유할 수 없습니다.' });
+            return res.status(403).json({ success: false, message: '비공개 플레이리스트는 공유할 수 없습니다.' });
         }
         
         // 프론트엔드 주소(CORS 설정에 있는 주소)를 기반으로 공유될 전체 URL 생성
-        // const frontendBaseUrl = 'https://polite-dune-035d4c800.2.azurestaticapps.net';
-        const frontendBaseUrl = 'http://localhost:5173';
+        const frontendBaseUrl = 'https://polite-dune-035d4c800.2.azurestaticapps.net';
+        // const frontendBaseUrl = 'http://localhost:5173';
         const shareUrl = `${frontendBaseUrl}/playlist/${id}`;
 
         // 페이스북 공유에 필요한 메타데이터를 JSON 형식으로 응답
@@ -576,7 +567,7 @@ shareRouter.get('/playlist/:id', async (req, res) => {
 
     } catch (err) {
         console.error('공유 정보 조회 실패:', err);
-        res.status(500).json({ message: '공유 정보를 가져오는 중 오류가 발생했습니다.', error: err.message });
+        res.status(500).json({ success: false, message: '공유 정보를 가져오는 중 오류가 발생했습니다.', error: err.message });
     }
 });
 

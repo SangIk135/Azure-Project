@@ -12,16 +12,17 @@ function PublicPlaylistsPage() {
     fetch(`${BASE_URL}/api/playlists/public`)
       .then(res => res.json())
       .then(data => {
-        console.log("Public PlayListData: ", data);
-        setPublicPlaylists(Array.isArray(data)
+        console.log("Public PlayListData1: ", data);
+          setPublicPlaylists(Array.isArray(data)
           ? data.map(p => ({
-            id: p.playlist_id,
-            name: p.name,
-            description: p.description,
-            creatorNickname: p.creator_nickname,
-            albumImageUrl: p.album_image_url,
-          }))
-          : []);
+              id: p.playlist_id,
+              name: p.name,
+              description: p.description,
+              creatorNickname: p.creator_nickname,
+              albumImageUrl: p.album_image_url,
+            }))
+            : []);
+        console.log("Public PlayListData2: ", data);
       })
       .catch(() => setPublicPlaylists([]));
   }, []);
